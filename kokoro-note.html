@@ -1,0 +1,1655 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#f4ede1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="こころノート" />
+<title>こころノート — はじめてのジャーナリング</title>
+<link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"こころノート","short_name":"こころノート","start_url":".","display":"standalone","background_color":"#f6f1e7","theme_color":"#f4ede1","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2240%22 fill=%22%23f4ede1%22/><path d=%22M58 132 L96 60 L134 132 Z%22 fill=%22%237a8a6f%22/><circle cx=%2296%22 cy=%22104%22 r=%2210%22 fill=%22%23d8b88a%22/></svg>","sizes":"192x192","type":"image/svg+xml"}]}' />
+<style>
+/* ============================================================
+   こころノート — Journaling for beginners
+   Design: soft, calm, beige + sage, rounded, lots of breathing room
+   ============================================================ */
+:root {
+  --bg: #f6f1e7;
+  --bg-soft: #fbf6ec;
+  --card: #ffffff;
+  --card-warm: #fdf8ee;
+  --ink: #3a3a36;
+  --ink-soft: #6b6b62;
+  --ink-mute: #9a9a90;
+  --line: #ece4d3;
+  --sage: #7a8a6f;
+  --sage-soft: #c8d3bd;
+  --sage-bg: #e9efe2;
+  --apricot: #d8b88a;
+  --apricot-soft: #f1e2c8;
+  --coral: #c89886;
+  --danger: #c45c4c;
+  --shadow: 0 2px 8px rgba(80, 70, 50, 0.06), 0 1px 2px rgba(80, 70, 50, 0.04);
+  --shadow-lg: 0 6px 24px rgba(80, 70, 50, 0.08), 0 2px 6px rgba(80, 70, 50, 0.04);
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-sm: 12px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+               "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-size: 15px;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  overscroll-behavior-y: none;
+}
+
+button {
+  font: inherit; color: inherit; background: transparent;
+  border: none; cursor: pointer; padding: 0;
+}
+input, textarea, select {
+  font: inherit; color: inherit;
+}
+textarea { resize: none; }
+
+/* App shell */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(76px + var(--safe-bottom));
+  background: var(--bg);
+}
+
+.screen { display: none; padding: 8px 20px 24px; animation: fade .35s ease both; }
+.screen.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Header */
+.app-header {
+  position: sticky; top: 0; z-index: 5;
+  padding: calc(var(--safe-top) + 12px) 20px 10px;
+  background: linear-gradient(to bottom, var(--bg) 70%, rgba(246,241,231,0));
+  display: flex; align-items: center; justify-content: space-between;
+}
+.app-title {
+  font-size: 17px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink);
+}
+.app-title .dot { color: var(--sage); }
+.greet { font-size: 13px; color: var(--ink-mute); margin-top: 2px; }
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-around;
+  padding: 10px 8px calc(10px + var(--safe-bottom));
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  z-index: 10;
+}
+.bottom-nav .tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px; color: var(--ink-mute);
+  font-size: 11px; border-radius: 12px; transition: color .2s;
+}
+.bottom-nav .tab.active { color: var(--sage); }
+.bottom-nav .tab:active { background: var(--sage-bg); }
+.bottom-nav .tab svg { width: 22px; height: 22px; }
+
+/* Cards */
+.card {
+  background: var(--card); border-radius: var(--radius-lg);
+  padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.card.warm { background: var(--card-warm); }
+.card.sage { background: var(--sage-bg); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 22px; border-radius: 999px;
+  background: var(--sage); color: white; font-weight: 600; font-size: 15px;
+  transition: transform .1s, opacity .2s;
+  min-height: 48px;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn.block { display: flex; width: 100%; }
+.btn.large { padding: 18px 24px; font-size: 16px; min-height: 56px; }
+.btn.ghost { background: transparent; color: var(--sage); border: 1px solid var(--sage-soft); }
+.btn.warm { background: var(--apricot); color: #5d4a2e; }
+.btn.muted { background: var(--bg-soft); color: var(--ink-soft); border: 1px solid var(--line); }
+.btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.link-btn {
+  color: var(--sage); font-weight: 500; padding: 6px 0; font-size: 14px;
+}
+
+/* Streak card */
+.streak {
+  display: flex; align-items: center; gap: 18px;
+  background: linear-gradient(135deg, #fff7e6 0%, #fdf2e0 100%);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+.streak-num {
+  font-size: 44px; font-weight: 700; line-height: 1;
+  color: var(--coral); font-family: "Georgia", serif;
+  min-width: 64px; text-align: center;
+}
+.streak-label { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.08em; }
+.streak-meta { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.streak-total { font-size: 12px; color: var(--ink-mute); margin-top: 6px; }
+
+/* CTA */
+.cta-write {
+  background: linear-gradient(160deg, var(--sage) 0%, #6c7d62 100%);
+  color: white; border-radius: var(--radius-lg);
+  padding: 24px 20px; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+  width: 100%; text-align: left;
+}
+.cta-write .cta-title { font-size: 17px; font-weight: 600; }
+.cta-write .cta-sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.cta-write .cta-arrow { font-size: 22px; }
+
+.skip-row {
+  display: flex; justify-content: center; margin-top: 4px; margin-bottom: 18px;
+}
+.skip-btn {
+  font-size: 13px; color: var(--ink-mute); padding: 8px 14px; border-radius: 999px;
+}
+.skip-btn:active { background: var(--bg-soft); }
+
+/* Section heads */
+.sec-head {
+  font-size: 13px; color: var(--ink-soft); margin: 22px 0 10px;
+  letter-spacing: 0.06em;
+}
+
+/* Method cards */
+.method-list { display: flex; flex-direction: column; gap: 12px; }
+.method {
+  display: flex; align-items: flex-start; gap: 14px; padding: 18px;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); text-align: left; width: 100%;
+}
+.method:active { background: var(--bg-soft); }
+.method-ico {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.method-ico.a { background: var(--apricot-soft); }
+.method-ico.b { background: #f7e8e0; }
+.method-ico.c { background: var(--sage-bg); }
+.method-ico.d { background: #ebe4f1; }
+.method-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+.method-desc { font-size: 12px; color: var(--ink-soft); }
+.method-meta { font-size: 11px; color: var(--ink-mute); margin-top: 4px; }
+
+/* Write form */
+.field { margin-bottom: 16px; }
+.field-label {
+  font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500;
+}
+.field-hint { font-size: 11px; color: var(--ink-mute); margin-top: 4px; }
+.field textarea, .field input[type="text"], .field input[type="time"] {
+  width: 100%; padding: 14px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  font-size: 15px; line-height: 1.7;
+  transition: border-color .2s;
+  -webkit-appearance: none; appearance: none;
+}
+.field textarea:focus, .field input:focus {
+  outline: none; border-color: var(--sage-soft);
+}
+.field textarea { min-height: 80px; }
+.field textarea.tall { min-height: 220px; }
+
+/* Free writing timer */
+.timer-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--sage-bg); border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+.timer-clock { font-size: 28px; font-weight: 700; color: var(--sage); font-family: "Georgia", serif; }
+.timer-ctrls { display: flex; gap: 8px; }
+.timer-btn {
+  padding: 8px 14px; border-radius: 999px; background: white;
+  color: var(--sage); font-weight: 600; font-size: 13px; border: 1px solid var(--sage-soft);
+}
+
+/* Prompt card */
+.prompt-card {
+  background: linear-gradient(160deg, #fffaf0 0%, #fdf2e0 100%);
+  padding: 22px; border-radius: var(--radius-lg);
+  margin-bottom: 14px; position: relative;
+}
+.prompt-quote { font-size: 32px; color: var(--apricot); position: absolute; top: 6px; left: 14px; font-family: "Georgia", serif; line-height: 1; }
+.prompt-text { font-size: 16px; font-weight: 500; padding-left: 22px; color: var(--ink); }
+.prompt-reshuffle {
+  position: absolute; top: 12px; right: 12px; font-size: 11px; color: var(--ink-mute);
+  padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.6);
+}
+
+/* Entry list */
+.entry {
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.entry-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.entry-date { font-size: 12px; color: var(--ink-mute); }
+.entry-method {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  background: var(--sage-bg); color: var(--sage);
+}
+.entry-method.skip { background: #f0e8d8; color: #8a7858; }
+.entry-body { font-size: 13px; color: var(--ink-soft); white-space: pre-wrap; word-break: break-word; }
+.entry-empty {
+  text-align: center; color: var(--ink-mute); font-size: 13px;
+  padding: 28px 16px;
+}
+
+/* Calendar */
+.cal {
+  background: var(--card); border-radius: var(--radius-lg);
+  padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.cal-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+}
+.cal-title { font-weight: 600; font-size: 15px; }
+.cal-nav { display: flex; gap: 4px; }
+.cal-nav button { padding: 6px 10px; color: var(--ink-soft); font-size: 18px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { font-size: 11px; color: var(--ink-mute); text-align: center; padding: 6px 0; }
+.cal-dow.sun { color: #c45c4c; }
+.cal-dow.sat { color: #5a7da3; }
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--ink-soft); border-radius: 10px;
+  position: relative; background: transparent;
+}
+.cal-cell.other { color: var(--ink-mute); opacity: 0.4; }
+.cal-cell.today { font-weight: 700; }
+.cal-cell .dot {
+  width: 6px; height: 6px; border-radius: 50%; margin-top: 2px; background: transparent;
+}
+.cal-cell.written .dot { background: var(--sage); }
+.cal-cell.skipped .dot { background: var(--apricot); }
+.cal-cell.today { background: var(--sage-bg); }
+
+/* Settings rows */
+.row {
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; text-align: left;
+}
+.row-label { font-size: 14px; }
+.row-sub { font-size: 12px; color: var(--ink-mute); margin-top: 2px; }
+.row-val { font-size: 13px; color: var(--ink-soft); }
+.row.danger .row-label { color: var(--danger); }
+
+/* Onboarding */
+.onb {
+  position: fixed; inset: 0; background: var(--bg);
+  z-index: 100; display: flex; flex-direction: column;
+  padding: calc(var(--safe-top) + 24px) 24px calc(var(--safe-bottom) + 24px);
+  max-width: 480px; margin: 0 auto;
+}
+.onb-step { flex: 1; display: none; flex-direction: column; justify-content: center; }
+.onb-step.active { display: flex; animation: fade .4s ease both; }
+.onb-art {
+  height: 180px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+}
+.onb-title { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 14px; }
+.onb-body { font-size: 14px; color: var(--ink-soft); line-height: 1.85; margin-bottom: 24px; }
+.onb-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+.onb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.onb-dot.active { background: var(--sage); width: 22px; border-radius: 999px; transition: all .3s; }
+.onb-actions { display: flex; gap: 10px; }
+.onb-actions .btn { flex: 1; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(40, 38, 32, 0.45);
+  z-index: 50; display: none; align-items: flex-end; justify-content: center;
+  animation: fade .2s ease both;
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  background: var(--bg); width: 100%; max-width: 480px;
+  border-radius: 24px 24px 0 0; padding: 22px 22px calc(22px + var(--safe-bottom));
+  animation: slideUp .3s ease both;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
+.modal h3 { margin: 0 0 8px; font-size: 17px; }
+.modal p { margin: 0 0 18px; color: var(--ink-soft); font-size: 14px; line-height: 1.8; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions .btn { flex: 1; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(90px + var(--safe-bottom));
+  background: var(--ink); color: white;
+  padding: 12px 18px; border-radius: 999px;
+  font-size: 13px; z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+/* Notes / encouragement strips */
+.encourage {
+  background: var(--sage-bg); border-radius: var(--radius);
+  padding: 12px 14px; font-size: 12px; color: #5a6952; line-height: 1.7;
+  margin-bottom: 12px;
+}
+.encourage strong { color: var(--sage); }
+
+/* Word art */
+.svg-art { width: 100%; height: 100%; }
+
+/* Misc */
+.center { text-align: center; }
+.muted { color: var(--ink-mute); }
+.soft { color: var(--ink-soft); }
+.spacer-sm { height: 8px; }
+.spacer { height: 16px; }
+.spacer-lg { height: 28px; }
+.flex-row { display: flex; gap: 10px; }
+.flex-row .field { flex: 1; }
+.hidden { display: none !important; }
+
+.review-card {
+  background: linear-gradient(160deg, var(--sage-bg) 0%, #f3f0e2 100%);
+  border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px;
+}
+.review-card h3 { margin: 0 0 6px; font-size: 16px; color: var(--ink); }
+.review-card p { margin: 0 0 12px; font-size: 13px; color: var(--ink-soft); line-height: 1.8; }
+
+.method-tag {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  background: var(--bg-soft); color: var(--ink-soft);
+}
+
+/* Detail view */
+.detail {
+  background: var(--card); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow);
+}
+.detail h3 { margin: 0 0 6px; font-size: 15px; }
+.detail .when { font-size: 12px; color: var(--ink-mute); margin-bottom: 12px; }
+.detail .content { font-size: 14px; line-height: 1.9; white-space: pre-wrap; word-break: break-word; }
+
+/* Back bar */
+.back-bar {
+  display: flex; align-items: center; gap: 6px; padding: 4px 0 8px;
+  color: var(--ink-soft); font-size: 14px;
+}
+.back-bar:active { opacity: 0.6; }
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Onboarding (first launch only)
+     ============================================================ -->
+<div class="onb" id="onb" style="display:none;">
+  <div class="onb-step active" data-step="0">
+    <div class="onb-art">
+      <svg class="svg-art" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fdf2e0"/>
+            <stop offset="1" stop-color="#e9efe2"/>
+          </linearGradient>
+        </defs>
+        <rect width="240" height="180" fill="url(#g1)" rx="20"/>
+        <circle cx="180" cy="44" r="22" fill="#f1e2c8"/>
+        <path d="M40 130 Q 80 90 120 110 T 200 100" stroke="#7a8a6f" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <rect x="60" y="76" width="120" height="76" rx="10" fill="#fff" stroke="#ece4d3"/>
+        <line x1="76" y1="98" x2="160" y2="98" stroke="#c8d3bd" stroke-width="2" stroke-linecap="round"/>
+        <line x1="76" y1="116" x2="146" y2="116" stroke="#c8d3bd" stroke-width="2" stroke-linecap="round"/>
+        <line x1="76" y1="134" x2="130" y2="134" stroke="#c8d3bd" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="onb-title">こころノートへ、<br>ようこそ。</div>
+    <div class="onb-body">
+      頭の中で渦を巻いている考えや気持ちを、<br>
+      1日3分だけ、外に出してみる場所です。<br><br>
+      上手く書く必要はありません。<br>
+      たった一行で、十分すぎるほどのスタートです。
+    </div>
+    <div class="onb-dots"><span class="onb-dot active"></span><span class="onb-dot"></span><span class="onb-dot"></span></div>
+    <div class="onb-actions">
+      <button class="btn block" data-onb-next>次へ</button>
+    </div>
+  </div>
+
+  <div class="onb-step" data-step="1">
+    <div class="onb-art">
+      <svg class="svg-art" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="240" height="180" fill="#fdf8ee" rx="20"/>
+        <circle cx="60" cy="60" r="28" fill="#f1e2c8"/>
+        <text x="60" y="68" font-size="28" text-anchor="middle" fill="#8a6d3a">3</text>
+        <circle cx="120" cy="60" r="28" fill="#f7e8e0"/>
+        <text x="120" y="68" font-size="22" text-anchor="middle" fill="#a86452">♥</text>
+        <circle cx="180" cy="60" r="28" fill="#e9efe2"/>
+        <text x="180" y="68" font-size="22" text-anchor="middle" fill="#6c7d62">✎</text>
+        <circle cx="90" cy="125" r="28" fill="#ebe4f1"/>
+        <text x="90" y="133" font-size="22" text-anchor="middle" fill="#7a6a8a">?</text>
+        <circle cx="150" cy="125" r="28" fill="#fdf2e0"/>
+        <text x="150" y="135" font-size="26" text-anchor="middle" fill="#c4925a">+</text>
+      </svg>
+    </div>
+    <div class="onb-title">4つの書き方から<br>選べます</div>
+    <div class="onb-body">
+      ・<strong>3行ジャーナル</strong> &nbsp;1分で書ける入門編<br>
+      ・<strong>感謝日記</strong> &nbsp;気分を少し持ち上げたい日に<br>
+      ・<strong>フリーライティング</strong> &nbsp;頭の中を流す5分<br>
+      ・<strong>プロンプト</strong> &nbsp;問いに答えるだけ<br><br>
+      全部やる必要はありません。<br>気分で選んでください。
+    </div>
+    <div class="onb-dots"><span class="onb-dot"></span><span class="onb-dot active"></span><span class="onb-dot"></span></div>
+    <div class="onb-actions">
+      <button class="btn ghost" data-onb-prev>戻る</button>
+      <button class="btn" data-onb-next>次へ</button>
+    </div>
+  </div>
+
+  <div class="onb-step" data-step="2">
+    <div class="onb-art">
+      <svg class="svg-art" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="240" height="180" fill="#e9efe2" rx="20"/>
+        <path d="M40 140 L 60 100 L 90 120 L 130 70 L 170 90 L 210 50" stroke="#7a8a6f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="60" cy="100" r="6" fill="#7a8a6f"/>
+        <circle cx="90" cy="120" r="6" fill="#7a8a6f"/>
+        <circle cx="130" cy="70" r="6" fill="#7a8a6f"/>
+        <circle cx="170" cy="90" r="6" fill="#7a8a6f"/>
+        <circle cx="210" cy="50" r="6" fill="#d8b88a"/>
+      </svg>
+    </div>
+    <div class="onb-title">三日坊主、<br>大歓迎です。</div>
+    <div class="onb-body">
+      書けない日があっても、<br>「今日は書けない」と一押しすれば、<br>
+      それも立派な記録として残ります。<br><br>
+      毎日完璧を目指すより、<br>
+      <strong>不完全な10回</strong>のほうが習慣になります。<br><br>
+      お名前(任意)を教えてくれますか?
+    </div>
+    <div class="field">
+      <input type="text" id="onb-name" placeholder="ニックネーム(空欄でもOK)" maxlength="20" />
+    </div>
+    <div class="onb-dots"><span class="onb-dot"></span><span class="onb-dot"></span><span class="onb-dot active"></span></div>
+    <div class="onb-actions">
+      <button class="btn ghost" data-onb-prev>戻る</button>
+      <button class="btn" id="onb-start">はじめる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Main app
+     ============================================================ -->
+<div class="app" id="app" style="display:none;">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div>
+      <div class="app-title">こころ<span class="dot">・</span>ノート</div>
+      <div class="greet" id="greet"></div>
+    </div>
+  </div>
+
+  <!-- ====== HOME ====== -->
+  <section class="screen active" id="screen-home">
+
+    <!-- Streak card -->
+    <div class="streak">
+      <div>
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label center">日連続</div>
+      </div>
+      <div style="flex:1;">
+        <div id="streak-msg" style="font-size:14px;color:var(--ink);line-height:1.7;">今日が、はじめの一日。</div>
+        <div class="streak-total" id="streak-total">これまでの記録: 0日</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="cta-write" id="cta-write">
+      <div>
+        <div class="cta-title" id="cta-title">今日のジャーナリングを書く</div>
+        <div class="cta-sub" id="cta-sub">3〜10分の自分時間</div>
+      </div>
+      <div class="cta-arrow">→</div>
+    </button>
+
+    <!-- Skip row -->
+    <div class="skip-row">
+      <button class="skip-btn" id="skip-btn">今日は書けない…と記録する</button>
+    </div>
+
+    <!-- Today's prompt -->
+    <div class="prompt-card">
+      <span class="prompt-quote">"</span>
+      <div class="prompt-text" id="today-prompt">準備中…</div>
+      <button class="prompt-reshuffle" id="prompt-shuffle">別の問いを見る</button>
+    </div>
+
+    <!-- Encouragement (changes contextually) -->
+    <div class="encourage" id="encourage" style="display:none;"></div>
+
+    <!-- Recent -->
+    <div class="sec-head">この1週間</div>
+    <div id="recent-list"></div>
+  </section>
+
+  <!-- ====== WRITE ====== -->
+  <section class="screen" id="screen-write">
+    <div id="write-picker">
+      <button class="back-bar" data-back>← ホーム</button>
+      <h2 style="font-size:18px;margin:6px 0 14px;">今日はどう書きますか?</h2>
+      <div class="encourage">
+        <strong>続けるコツ:</strong> 「ちゃんと書く」より、「3行でも書く」を選んでください。短くても、書いたという事実が次の日を呼びます。
+      </div>
+      <div class="method-list">
+        <button class="method" data-method="three">
+          <div class="method-ico a">3</div>
+          <div>
+            <div class="method-name">3行ジャーナル</div>
+            <div class="method-desc">あったこと/感じたこと/明日への一言。1分で終わります。</div>
+            <div class="method-meta">約1分 · 初心者おすすめ</div>
+          </div>
+        </button>
+        <button class="method" data-method="gratitude">
+          <div class="method-ico b">♥</div>
+          <div>
+            <div class="method-name">感謝日記</div>
+            <div class="method-desc">今日ありがたかったことを3つ。研究でもっとも軽くて効きやすい型です。</div>
+            <div class="method-meta">約3分 · 落ち着きたい夜に</div>
+          </div>
+        </button>
+        <button class="method" data-method="free">
+          <div class="method-ico c">✎</div>
+          <div>
+            <div class="method-name">フリーライティング</div>
+            <div class="method-desc">5分タイマー。手を止めず、頭に浮かんだことを流すだけ。</div>
+            <div class="method-meta">5分 · 頭が散らかった時に</div>
+          </div>
+        </button>
+        <button class="method" data-method="prompt">
+          <div class="method-ico d">?</div>
+          <div>
+            <div class="method-name">プロンプトに答える</div>
+            <div class="method-desc">問いに沿って書きます。白紙が怖い人に。</div>
+            <div class="method-meta">約3分 · 迷ったらこれ</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- THREE LINE -->
+    <div id="write-three" class="hidden">
+      <button class="back-bar" data-back-picker>← 戻る</button>
+      <h2 style="font-size:18px;margin:6px 0 14px;">3行ジャーナル</h2>
+      <div class="field">
+        <div class="field-label">① 今日あったこと</div>
+        <textarea id="three-1" placeholder="例: 朝寝坊した。昼に同僚とランチ。" maxlength="500"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">② 感じたこと</div>
+        <textarea id="three-2" placeholder="例: 焦った。話せてほっとした。" maxlength="500"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">③ 明日の自分への一言</div>
+        <textarea id="three-3" placeholder="例: 5分早く起きる。" maxlength="500"></textarea>
+      </div>
+      <button class="btn block large" data-save="three">保存する</button>
+      <div class="spacer"></div>
+      <p class="muted center" style="font-size:12px;">空欄があってもOK。1つでも書けたら今日は合格です。</p>
+    </div>
+
+    <!-- GRATITUDE -->
+    <div id="write-gratitude" class="hidden">
+      <button class="back-bar" data-back-picker>← 戻る</button>
+      <h2 style="font-size:18px;margin:6px 0 14px;">感謝日記</h2>
+      <div class="encourage">
+        無理に「ありがたい」と感じる必要はありません。<strong>小さな出来事</strong>で十分です。コーヒーがおいしかった、信号でちょうど止まらなかった、それでもOK。
+      </div>
+      <div class="field">
+        <div class="field-label">① ありがたかったこと</div>
+        <textarea id="grat-1" placeholder="例: 同僚がコーヒーに誘ってくれた" maxlength="500"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">② ありがたかったこと</div>
+        <textarea id="grat-2" maxlength="500"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">③ ありがたかったこと</div>
+        <textarea id="grat-3" maxlength="500"></textarea>
+      </div>
+      <button class="btn block large" data-save="gratitude">保存する</button>
+    </div>
+
+    <!-- FREE -->
+    <div id="write-free" class="hidden">
+      <button class="back-bar" data-back-picker>← 戻る</button>
+      <h2 style="font-size:18px;margin:6px 0 14px;">フリーライティング</h2>
+      <div class="timer-wrap">
+        <div class="timer-clock" id="timer-clock">05:00</div>
+        <div class="timer-ctrls">
+          <button class="timer-btn" id="timer-start">開始</button>
+          <button class="timer-btn" id="timer-reset">リセット</button>
+        </div>
+      </div>
+      <div class="encourage">
+        手を止めないことだけがルール。書くことがなければ <em>「書くことがない、と今思っている」</em> と書いて構いません。文法・誤字は気にしないでください。
+      </div>
+      <div class="field">
+        <textarea id="free-text" class="tall" placeholder="頭に浮かんだことを、そのまま書く…" maxlength="20000"></textarea>
+        <div class="field-hint"><span id="free-count">0</span>文字</div>
+      </div>
+      <button class="btn block large" data-save="free">保存する</button>
+    </div>
+
+    <!-- PROMPT -->
+    <div id="write-prompt" class="hidden">
+      <button class="back-bar" data-back-picker>← 戻る</button>
+      <h2 style="font-size:18px;margin:6px 0 14px;">プロンプトに答える</h2>
+      <div class="prompt-card" style="margin-bottom:18px;">
+        <span class="prompt-quote">"</span>
+        <div class="prompt-text" id="write-prompt-text">準備中…</div>
+        <button class="prompt-reshuffle" id="write-prompt-shuffle">別の問い</button>
+      </div>
+      <div class="field">
+        <textarea id="prompt-text" class="tall" placeholder="思いついたことから、自由に…" maxlength="10000"></textarea>
+      </div>
+      <button class="btn block large" data-save="prompt">保存する</button>
+    </div>
+  </section>
+
+  <!-- ====== REVIEW ====== -->
+  <section class="screen" id="screen-review">
+    <h2 style="font-size:18px;margin:8px 0 14px;">振り返り</h2>
+
+    <div id="weekend-banner" style="display:none;"></div>
+
+    <div class="cal" id="cal"></div>
+
+    <div class="sec-head" id="entries-head">最近の記録</div>
+    <div id="entry-list"></div>
+  </section>
+
+  <!-- ====== DETAIL ====== -->
+  <section class="screen" id="screen-detail">
+    <button class="back-bar" data-back-review>← 振り返り</button>
+    <div id="detail-box"></div>
+    <div class="spacer"></div>
+    <button class="btn danger block" id="detail-delete">この記録を削除</button>
+  </section>
+
+  <!-- ====== SETTINGS ====== -->
+  <section class="screen" id="screen-settings">
+    <h2 style="font-size:18px;margin:8px 0 14px;">設定</h2>
+
+    <button class="row" id="set-name">
+      <div>
+        <div class="row-label">ニックネーム</div>
+        <div class="row-sub">アプリ内の呼びかけに使います</div>
+      </div>
+      <div class="row-val" id="set-name-val">—</div>
+    </button>
+
+    <button class="row" id="set-reminder">
+      <div>
+        <div class="row-label">リマインダー時刻</div>
+        <div class="row-sub">通知許可が必要です</div>
+      </div>
+      <div class="row-val" id="set-reminder-val">未設定</div>
+    </button>
+
+    <div class="sec-head">データ</div>
+
+    <button class="row" id="set-export">
+      <div>
+        <div class="row-label">JSONとして書き出す</div>
+        <div class="row-sub">バックアップ用に</div>
+      </div>
+      <div class="row-val">→</div>
+    </button>
+
+    <button class="row danger" id="set-delete">
+      <div>
+        <div class="row-label">すべてのデータを削除</div>
+        <div class="row-sub">取り消せません</div>
+      </div>
+    </button>
+
+    <div class="sec-head">このアプリについて</div>
+    <div class="card warm">
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.85;margin:0;">
+        こころノートは、書いた内容を<strong>すべてあなたの端末にだけ</strong>保存します(localStorage)。サーバーに送信されることはありません。<br><br>
+        ジャーナリングは強力なセルフケアですが、深刻な不安・抑うつ・トラウマの専門的治療の代替にはなりません。書いていてつらさが増す場合は、書く手を止めて、信頼できる人や専門家に相談してください。<br>
+        厚生労働省 こころの健康相談統一ダイヤル: 0570-064-556
+      </p>
+    </div>
+    <div class="spacer"></div>
+    <div class="muted center" style="font-size:11px;">v1.0 · made with care</div>
+    <div class="spacer-lg"></div>
+  </section>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="tab active" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2v-9z"/></svg>
+      <span>ホーム</span>
+    </button>
+    <button class="tab" data-tab="write">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M14 4l4 4-10 10H4v-4L14 4z"/></svg>
+      <span>書く</span>
+    </button>
+    <button class="tab" data-tab="review">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      <span>振り返り</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.39.16.74.39 1 .7"/></svg>
+      <span>設定</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">タイトル</h3>
+    <p id="modal-body">本文</p>
+    <div id="modal-extra"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="modal-cancel">キャンセル</button>
+      <button class="btn" id="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   こころノート - app logic
+   ============================================================ */
+
+// ----- Constants -----
+const STORAGE_KEY = 'kokoro-note:v1';
+const PROMPTS = [
+  '今、いちばん心に引っかかっていることは何?',
+  '今日、小さくても良かったことは?',
+  'もし不安が話せるなら、何と言っているだろう?',
+  '1年後の自分は、今の私に何と声をかける?',
+  '最近、自分を少しでも誇れた瞬間は?',
+  '今の感情を1つ挙げるとしたら?それはどこから来た?',
+  '今日、誰の言葉が残った?',
+  '自分にしてあげたいことは何?',
+  '最近、心がほどけた瞬間は?',
+  '今、手放したいものは1つだけ何?',
+  '今週、ありがとうを伝えたい人は?',
+  '今日、自分の身体はどんな声を出している?',
+  '5年前の自分が、今の私を見たら何と言う?',
+  '本当は、誰に何と言ってほしい?',
+  '何もしなくていい時間があったら、何をする?',
+  '今日、避けようとしている感情はある?',
+  '最近、繰り返している同じ悩みは?',
+  '今、自分にとっての「ちょうどよさ」はどんな状態?',
+  '怒りがあるとしたら、それは何を守ろうとしている?',
+  '今日、自分を許してあげられることは?',
+  '今、ちゃんと休めているのは身体のどこ?',
+  '最近、無理して笑っていたことはある?',
+  '本当はやめたい習慣は何?',
+  '誰のために、何をやりすぎている?',
+  '理想の朝は、どんなふうに始まる?',
+  '今、自分の中で1番強い感情は?その下に何がある?',
+  '今日、いちばん時間を奪われたものは?',
+  '最近、勇気を出せた瞬間はあった?',
+  '誰かに頼ってもよさそうな場面は?',
+  '今夜、自分に贈れる小さな優しさは?'
+];
+
+const ENCOURAGE_RETURN = [
+  '<strong>おかえりなさい。</strong> 空いた日があっても、習慣は復活します。今日はたった1行でOKです。',
+  '<strong>大丈夫。</strong> 「不完全な10回」が「完璧な1回」より強いと、研究で示されています。',
+  '<strong>今日は3行でも十分。</strong> 量より、書いたという事実です。'
+];
+
+// ----- State (in-memory, mirrors localStorage) -----
+const defaultState = () => ({
+  settings: {
+    nickname: '',
+    reminderTime: '', // 'HH:MM' or ''
+    createdAt: new Date().toISOString(),
+    onboarded: false
+  },
+  entries: [],
+  streak: { current: 0, longest: 0, totalDays: 0, lastDate: '' },
+  promptSeed: 0
+});
+
+let state = defaultState();
+
+// ----- Persistence -----
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    showToast('保存できませんでした');
+  }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      // Migrate-safe merge
+      state = Object.assign(defaultState(), parsed);
+      state.settings = Object.assign(defaultState().settings, parsed.settings || {});
+      state.streak = Object.assign(defaultState().streak, parsed.streak || {});
+      state.entries = Array.isArray(parsed.entries) ? parsed.entries : [];
+      return true;
+    }
+  } catch (e) {
+    // ignore corrupt
+  }
+  return false;
+}
+
+// ----- Date utils -----
+function todayKey(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseKey(k) {
+  const [y, m, d] = k.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function daysBetween(aKey, bKey) {
+  const a = parseKey(aKey), b = parseKey(bKey);
+  return Math.round((b - a) / (24 * 3600 * 1000));
+}
+function formatDate(d) {
+  const m = d.getMonth() + 1, day = d.getDate();
+  const wd = ['日','月','火','水','木','金','土'][d.getDay()];
+  return `${m}月${day}日(${wd})`;
+}
+function timeOfDayGreeting() {
+  const h = new Date().getHours();
+  if (h < 5) return '夜更かしお疲れさま';
+  if (h < 10) return 'おはようございます';
+  if (h < 17) return 'こんにちは';
+  if (h < 22) return 'こんばんは';
+  return 'お疲れさま';
+}
+
+// ----- Streak logic -----
+function updateStreakOnEntry(dateKey) {
+  const s = state.streak;
+  if (!s.lastDate) {
+    s.current = 1; s.longest = 1; s.totalDays = 1; s.lastDate = dateKey;
+    return;
+  }
+  if (s.lastDate === dateKey) {
+    // same day - keep streak unchanged; totalDays already counted
+    return;
+  }
+  const gap = daysBetween(s.lastDate, dateKey);
+  if (gap === 1) {
+    s.current += 1;
+  } else if (gap > 1) {
+    s.current = 1;
+  } else if (gap < 0) {
+    // older entry - ignore for streak
+    s.totalDays += 1;
+    return;
+  }
+  if (s.current > s.longest) s.longest = s.current;
+  s.totalDays += 1;
+  s.lastDate = dateKey;
+}
+
+// recompute streak from scratch (used after deletion)
+function recomputeStreak() {
+  const s = state.streak;
+  const dateKeys = [...new Set(state.entries.map(e => e.date))].sort();
+  if (dateKeys.length === 0) {
+    state.streak = { current: 0, longest: 0, totalDays: 0, lastDate: '' };
+    return;
+  }
+  let cur = 1, longest = 1;
+  for (let i = 1; i < dateKeys.length; i++) {
+    if (daysBetween(dateKeys[i-1], dateKeys[i]) === 1) {
+      cur += 1;
+      if (cur > longest) longest = cur;
+    } else {
+      cur = 1;
+    }
+  }
+  // current streak only valid if last entry is today or yesterday
+  const last = dateKeys[dateKeys.length - 1];
+  const today = todayKey();
+  const gapToToday = daysBetween(last, today);
+  let current = 0;
+  if (gapToToday === 0 || gapToToday === 1) current = cur;
+  state.streak = {
+    current,
+    longest,
+    totalDays: dateKeys.length,
+    lastDate: last
+  };
+}
+
+// ----- Prompt of the day -----
+function todayPrompt() {
+  const d = new Date();
+  const seed = (d.getFullYear() * 1000) + ((d.getMonth() + 1) * 31) + d.getDate() + (state.promptSeed || 0);
+  return PROMPTS[seed % PROMPTS.length];
+}
+function shufflePrompt() {
+  state.promptSeed = (state.promptSeed || 0) + 1;
+  save();
+  renderHome();
+  const wp = document.getElementById('write-prompt-text');
+  if (wp) wp.textContent = todayPrompt();
+}
+
+// ----- Entry CRUD -----
+function addEntry(method, content) {
+  const id = 'e' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const dateKey = todayKey();
+  const entry = {
+    id, date: dateKey, method,
+    content: content || '',
+    createdAt: new Date().toISOString()
+  };
+  state.entries.push(entry);
+  updateStreakOnEntry(dateKey);
+  save();
+  return entry;
+}
+function deleteEntry(id) {
+  state.entries = state.entries.filter(e => e.id !== id);
+  recomputeStreak();
+  save();
+}
+
+// ----- Render: home -----
+function renderHome() {
+  const nick = state.settings.nickname;
+  const greet = timeOfDayGreeting() + (nick ? `、${nick}さん` : '');
+  document.getElementById('greet').textContent = greet;
+
+  document.getElementById('streak-num').textContent = state.streak.current;
+  document.getElementById('streak-total').textContent =
+    `これまでの記録: ${state.streak.totalDays}日 ・ 最長: ${state.streak.longest}日`;
+
+  const today = todayKey();
+  const todayEntries = state.entries.filter(e => e.date === today);
+  const hasToday = todayEntries.length > 0;
+
+  const msg = document.getElementById('streak-msg');
+  if (hasToday) {
+    msg.textContent = '今日も書けましたね。すばらしい。';
+  } else if (state.streak.current === 0 && state.streak.totalDays === 0) {
+    msg.textContent = '今日が、はじめの一日。';
+  } else if (state.streak.current === 0) {
+    msg.innerHTML = 'おかえりなさい。<br>今日、1行から再開しませんか?';
+  } else {
+    msg.textContent = `${state.streak.current}日続いています。続けていきましょう。`;
+  }
+
+  // CTA copy
+  const cta = document.getElementById('cta-title');
+  const ctaSub = document.getElementById('cta-sub');
+  if (hasToday) {
+    cta.textContent = 'もう一つ書き足す';
+    ctaSub.textContent = '今日はもう一行、追加してもOK';
+  } else {
+    cta.textContent = '今日のジャーナリングを書く';
+    ctaSub.textContent = '3〜10分の自分時間';
+  }
+
+  // Prompt
+  document.getElementById('today-prompt').textContent = todayPrompt();
+
+  // Encouragement banner
+  const enc = document.getElementById('encourage');
+  const gapToToday = state.streak.lastDate
+    ? daysBetween(state.streak.lastDate, today)
+    : -1;
+  if (state.streak.totalDays > 0 && gapToToday >= 2 && !hasToday) {
+    enc.style.display = 'block';
+    enc.innerHTML = ENCOURAGE_RETURN[0];
+  } else {
+    enc.style.display = 'none';
+  }
+
+  // Recent week list
+  const recent = document.getElementById('recent-list');
+  recent.innerHTML = '';
+  const week = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = todayKey(d);
+    const items = state.entries.filter(e => e.date === k);
+    if (items.length) week.push({ date: k, items });
+  }
+  if (week.length === 0) {
+    recent.innerHTML = '<div class="entry-empty">まだ記録がありません。<br>最初の1行を書いてみましょう。</div>';
+  } else {
+    week.slice(0, 5).forEach(({ date, items }) => {
+      items.forEach(it => recent.appendChild(renderEntryCard(it)));
+    });
+  }
+}
+
+function renderEntryCard(e) {
+  const wrap = document.createElement('button');
+  wrap.className = 'entry';
+  wrap.style.display = 'block';
+  wrap.style.width = '100%';
+  wrap.style.textAlign = 'left';
+  wrap.dataset.entryId = e.id;
+
+  const head = document.createElement('div'); head.className = 'entry-head';
+  const date = document.createElement('span'); date.className = 'entry-date';
+  date.textContent = formatDate(parseKey(e.date));
+  const meth = document.createElement('span'); meth.className = 'entry-method';
+  meth.textContent = methodLabel(e.method);
+  if (e.method === 'skip') meth.classList.add('skip');
+  head.appendChild(date); head.appendChild(meth);
+
+  const body = document.createElement('div'); body.className = 'entry-body';
+  body.textContent = summary(e);
+
+  wrap.appendChild(head);
+  wrap.appendChild(body);
+  wrap.addEventListener('click', () => openDetail(e.id));
+  return wrap;
+}
+
+function methodLabel(m) {
+  switch (m) {
+    case 'three': return '3行';
+    case 'gratitude': return '感謝';
+    case 'free': return 'フリー';
+    case 'prompt': return 'プロンプト';
+    case 'skip': return '休み';
+    default: return m;
+  }
+}
+
+function summary(e) {
+  const c = e.content || '';
+  if (e.method === 'skip') return '今日は書けない、と記録した日。';
+  if (c.length > 80) return c.slice(0, 80) + '…';
+  return c || '(空)';
+}
+
+// ----- Render: review -----
+let calMonth = (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })();
+
+function renderReview() {
+  // Weekend banner (Sun)
+  const banner = document.getElementById('weekend-banner');
+  const dow = new Date().getDay();
+  if (dow === 0 && state.entries.length > 0) {
+    banner.style.display = 'block';
+    banner.innerHTML = `
+      <div class="review-card">
+        <h3>週末の振り返り</h3>
+        <p>この1週間に書いたものを、ぼんやり眺めてみませんか? 気づきは、振り返るときに生まれます。</p>
+      </div>`;
+  } else {
+    banner.style.display = 'none';
+  }
+
+  renderCalendar();
+  renderEntries();
+}
+
+function renderCalendar() {
+  const cal = document.getElementById('cal');
+  const { y, m } = calMonth;
+  const first = new Date(y, m, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+  const today = todayKey();
+
+  // Build map: date -> kind
+  const map = {};
+  state.entries.forEach(e => {
+    if (!map[e.date]) map[e.date] = e.method === 'skip' ? 'skip' : 'written';
+    else if (map[e.date] === 'skip' && e.method !== 'skip') map[e.date] = 'written';
+  });
+
+  let html = `
+    <div class="cal-head">
+      <div class="cal-title">${y}年${m+1}月</div>
+      <div class="cal-nav">
+        <button id="cal-prev">‹</button>
+        <button id="cal-next">›</button>
+      </div>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dow sun">日</div>
+      <div class="cal-dow">月</div>
+      <div class="cal-dow">火</div>
+      <div class="cal-dow">水</div>
+      <div class="cal-dow">木</div>
+      <div class="cal-dow">金</div>
+      <div class="cal-dow sat">土</div>
+  `;
+  // leading
+  for (let i = 0; i < startDow; i++) {
+    const d = prevDays - startDow + 1 + i;
+    html += `<div class="cal-cell other"><span>${d}</span><span class="dot"></span></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const k = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const kind = map[k] || '';
+    const isToday = k === today;
+    html += `<div class="cal-cell${isToday ? ' today' : ''}${kind ? ' ' + kind : ''}" data-date="${k}"><span>${d}</span><span class="dot"></span></div>`;
+  }
+  // trailing
+  const totalCells = startDow + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= trailing; i++) {
+    html += `<div class="cal-cell other"><span>${i}</span><span class="dot"></span></div>`;
+  }
+  html += `</div>`;
+  // Legend
+  html += `<div style="display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:11px;color:var(--ink-mute);">
+    <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--sage);vertical-align:1px;"></span> 書いた</span>
+    <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--apricot);vertical-align:1px;"></span> 休み</span>
+  </div>`;
+
+  cal.innerHTML = html;
+
+  document.getElementById('cal-prev').onclick = () => {
+    calMonth.m -= 1;
+    if (calMonth.m < 0) { calMonth.m = 11; calMonth.y -= 1; }
+    renderCalendar();
+  };
+  document.getElementById('cal-next').onclick = () => {
+    calMonth.m += 1;
+    if (calMonth.m > 11) { calMonth.m = 0; calMonth.y += 1; }
+    renderCalendar();
+  };
+  cal.querySelectorAll('.cal-cell[data-date]').forEach(c => {
+    c.addEventListener('click', () => {
+      const k = c.dataset.date;
+      const es = state.entries.filter(e => e.date === k);
+      if (es.length) openDetail(es[0].id);
+    });
+  });
+}
+
+function renderEntries() {
+  const list = document.getElementById('entry-list');
+  const sorted = [...state.entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  list.innerHTML = '';
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="entry-empty">まだ記録がありません。</div>';
+    return;
+  }
+  sorted.slice(0, 30).forEach(e => list.appendChild(renderEntryCard(e)));
+}
+
+// ----- Detail view -----
+let detailEntryId = null;
+function openDetail(id) {
+  const e = state.entries.find(x => x.id === id);
+  if (!e) return;
+  detailEntryId = id;
+  const box = document.getElementById('detail-box');
+  box.innerHTML = `
+    <div class="detail">
+      <h3>${methodLabel(e.method)}</h3>
+      <div class="when">${formatDate(parseKey(e.date))}</div>
+      <div class="content">${escapeHtml(e.content || (e.method === 'skip' ? '今日は書けない、と記録した日。' : '(空)'))}</div>
+    </div>`;
+  goScreen('detail');
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ----- Settings -----
+function renderSettings() {
+  document.getElementById('set-name-val').textContent = state.settings.nickname || '—';
+  document.getElementById('set-reminder-val').textContent = state.settings.reminderTime || '未設定';
+}
+
+// ----- Navigation -----
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+  // Update tabs (detail is not a tab)
+  document.querySelectorAll('.bottom-nav .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  if (name === 'home') renderHome();
+  if (name === 'review') renderReview();
+  if (name === 'settings') renderSettings();
+  if (name === 'write') resetWritePicker();
+  window.scrollTo({ top: 0 });
+}
+
+function resetWritePicker() {
+  document.getElementById('write-picker').classList.remove('hidden');
+  ['three','gratitude','free','prompt'].forEach(k => {
+    document.getElementById('write-' + k).classList.add('hidden');
+  });
+}
+
+function showWriteMethod(method) {
+  document.getElementById('write-picker').classList.add('hidden');
+  ['three','gratitude','free','prompt'].forEach(k => {
+    document.getElementById('write-' + k).classList.toggle('hidden', k !== method);
+  });
+  if (method === 'prompt') {
+    document.getElementById('write-prompt-text').textContent = todayPrompt();
+  }
+  // Reset fields
+  if (method === 'three') ['three-1','three-2','three-3'].forEach(id => document.getElementById(id).value = '');
+  if (method === 'gratitude') ['grat-1','grat-2','grat-3'].forEach(id => document.getElementById(id).value = '');
+  if (method === 'free') {
+    document.getElementById('free-text').value = '';
+    resetTimer();
+    updateFreeCount();
+  }
+  if (method === 'prompt') document.getElementById('prompt-text').value = '';
+}
+
+// ----- Save handlers -----
+function handleSave(method) {
+  let content = '';
+  if (method === 'three') {
+    const a = document.getElementById('three-1').value.trim();
+    const b = document.getElementById('three-2').value.trim();
+    const c = document.getElementById('three-3').value.trim();
+    if (!a && !b && !c) { showToast('1つでも記入してください'); return; }
+    content = [
+      a && `① あったこと\n${a}`,
+      b && `② 感じたこと\n${b}`,
+      c && `③ 明日への一言\n${c}`
+    ].filter(Boolean).join('\n\n');
+  } else if (method === 'gratitude') {
+    const a = document.getElementById('grat-1').value.trim();
+    const b = document.getElementById('grat-2').value.trim();
+    const c = document.getElementById('grat-3').value.trim();
+    if (!a && !b && !c) { showToast('1つでも記入してください'); return; }
+    content = [a, b, c].filter(Boolean).map((t, i) => `${i+1}. ${t}`).join('\n');
+  } else if (method === 'free') {
+    content = document.getElementById('free-text').value.trim();
+    if (!content) { showToast('何か書いてみてください'); return; }
+  } else if (method === 'prompt') {
+    const q = document.getElementById('write-prompt-text').textContent;
+    const a = document.getElementById('prompt-text').value.trim();
+    if (!a) { showToast('答えを書いてください'); return; }
+    content = `Q. ${q}\n\n${a}`;
+  }
+  addEntry(method, content);
+  stopTimer();
+  showToast('保存しました');
+  goScreen('home');
+}
+
+// ----- Skip (couldn't write today) -----
+function handleSkip() {
+  openModal({
+    title: '今日は書けないと記録しますか?',
+    body: '空白のままより、たった一つの「書けない」のほうが、習慣を切らさずに済みます。これも立派な記録です。',
+    okText: '記録する',
+    onOk: () => {
+      const today = todayKey();
+      // Don't duplicate today's skip
+      const existing = state.entries.find(e => e.date === today && e.method === 'skip');
+      if (existing) {
+        showToast('今日はすでに記録されています');
+        return;
+      }
+      addEntry('skip', '');
+      showToast('お疲れさま。また明日。');
+      renderHome();
+    }
+  });
+}
+
+// ----- Timer -----
+let timerInterval = null;
+let timerRemaining = 5 * 60; // seconds
+function renderTimer() {
+  const m = Math.floor(timerRemaining / 60);
+  const s = timerRemaining % 60;
+  document.getElementById('timer-clock').textContent =
+    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function startTimer() {
+  if (timerInterval) return;
+  document.getElementById('timer-start').textContent = '一時停止';
+  timerInterval = setInterval(() => {
+    timerRemaining -= 1;
+    if (timerRemaining <= 0) {
+      stopTimer();
+      timerRemaining = 0;
+      renderTimer();
+      showToast('5分経ちました。続けても、ここで止めても。');
+      try { navigator.vibrate && navigator.vibrate([60, 80, 60]); } catch(e) {}
+      return;
+    }
+    renderTimer();
+  }, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const btn = document.getElementById('timer-start');
+  if (btn) btn.textContent = '開始';
+}
+function resetTimer() {
+  stopTimer();
+  timerRemaining = 5 * 60;
+  renderTimer();
+}
+function toggleTimer() {
+  if (timerInterval) stopTimer();
+  else startTimer();
+}
+
+function updateFreeCount() {
+  const t = document.getElementById('free-text');
+  const c = document.getElementById('free-count');
+  if (t && c) c.textContent = t.value.length;
+}
+
+// ----- Modal -----
+let modalOnOk = null;
+function openModal({ title, body, okText = 'OK', cancelText = 'キャンセル', extra = '', onOk = null }) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-extra').innerHTML = extra;
+  document.getElementById('modal-ok').textContent = okText;
+  document.getElementById('modal-cancel').textContent = cancelText;
+  modalOnOk = onOk;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  modalOnOk = null;
+}
+
+// ----- Toast -----
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ----- Onboarding -----
+function startOnboarding() {
+  document.getElementById('onb').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  showOnbStep(0);
+}
+function showOnbStep(i) {
+  document.querySelectorAll('.onb-step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.onb-step[data-step="${i}"]`).classList.add('active');
+}
+function finishOnboarding() {
+  const name = document.getElementById('onb-name').value.trim().slice(0, 20);
+  state.settings.nickname = name;
+  state.settings.onboarded = true;
+  save();
+  document.getElementById('onb').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  goScreen('home');
+}
+
+// ----- Export / delete -----
+function exportJSON() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kokoro-note-${todayKey()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('書き出しました');
+}
+
+function deleteAll() {
+  openModal({
+    title: 'すべてのデータを削除しますか?',
+    body: '記録・設定・連続日数すべてが消えます。取り消せません。',
+    okText: '削除する',
+    onOk: () => {
+      localStorage.removeItem(STORAGE_KEY);
+      state = defaultState();
+      save();
+      showToast('削除しました');
+      startOnboarding();
+    }
+  });
+}
+
+// ----- Reminder (best-effort, browser permissions) -----
+async function setupReminder(timeStr) {
+  // We just save the time. Actual scheduling requires the page to be open,
+  // so we set a one-shot setTimeout when the user keeps the page open.
+  state.settings.reminderTime = timeStr;
+  save();
+  if (timeStr && 'Notification' in window) {
+    if (Notification.permission === 'default') {
+      try { await Notification.requestPermission(); } catch(e) {}
+    }
+  }
+  scheduleReminder();
+}
+function scheduleReminder() {
+  if (window._reminderTimer) clearTimeout(window._reminderTimer);
+  const t = state.settings.reminderTime;
+  if (!t || !/^\d{2}:\d{2}$/.test(t)) return;
+  const [hh, mm] = t.split(':').map(Number);
+  const now = new Date();
+  const target = new Date();
+  target.setHours(hh, mm, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const ms = target - now;
+  window._reminderTimer = setTimeout(() => {
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('こころノート', { body: '今日の1行、書きませんか?' });
+      }
+    } catch(e) {}
+    scheduleReminder();
+  }, ms);
+}
+
+// ----- Event wiring -----
+function wire() {
+  // Tabs
+  document.querySelectorAll('.bottom-nav .tab').forEach(t => {
+    t.addEventListener('click', () => goScreen(t.dataset.tab));
+  });
+
+  // Home CTA
+  document.getElementById('cta-write').addEventListener('click', () => goScreen('write'));
+  document.getElementById('skip-btn').addEventListener('click', handleSkip);
+  document.getElementById('prompt-shuffle').addEventListener('click', shufflePrompt);
+
+  // Write method buttons
+  document.querySelectorAll('.method[data-method]').forEach(b => {
+    b.addEventListener('click', () => showWriteMethod(b.dataset.method));
+  });
+
+  // Back from method
+  document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => goScreen('home')));
+  document.querySelectorAll('[data-back-picker]').forEach(b => b.addEventListener('click', () => {
+    stopTimer();
+    resetWritePicker();
+  }));
+  document.querySelectorAll('[data-back-review]').forEach(b => b.addEventListener('click', () => goScreen('review')));
+
+  // Save
+  document.querySelectorAll('[data-save]').forEach(b => {
+    b.addEventListener('click', () => handleSave(b.dataset.save));
+  });
+
+  // Timer
+  document.getElementById('timer-start').addEventListener('click', toggleTimer);
+  document.getElementById('timer-reset').addEventListener('click', resetTimer);
+  document.getElementById('free-text').addEventListener('input', updateFreeCount);
+
+  // Prompt shuffle inside write
+  document.getElementById('write-prompt-shuffle').addEventListener('click', () => {
+    shufflePrompt();
+    document.getElementById('write-prompt-text').textContent = todayPrompt();
+  });
+
+  // Onboarding nav
+  let onbIdx = 0;
+  document.querySelectorAll('[data-onb-next]').forEach(b => b.addEventListener('click', () => {
+    onbIdx = Math.min(2, onbIdx + 1);
+    showOnbStep(onbIdx);
+  }));
+  document.querySelectorAll('[data-onb-prev]').forEach(b => b.addEventListener('click', () => {
+    onbIdx = Math.max(0, onbIdx - 1);
+    showOnbStep(onbIdx);
+  }));
+  document.getElementById('onb-start').addEventListener('click', finishOnboarding);
+
+  // Settings
+  document.getElementById('set-name').addEventListener('click', () => {
+    openModal({
+      title: 'ニックネーム',
+      body: 'アプリ内の呼びかけに使います。空欄も可。',
+      okText: '保存',
+      extra: `<div class="field"><input type="text" id="modal-input" maxlength="20" value="${escapeHtml(state.settings.nickname || '')}" placeholder="ニックネーム" /></div>`,
+      onOk: () => {
+        const v = document.getElementById('modal-input').value.trim().slice(0, 20);
+        state.settings.nickname = v;
+        save(); renderSettings(); renderHome();
+        showToast('保存しました');
+      }
+    });
+  });
+  document.getElementById('set-reminder').addEventListener('click', () => {
+    openModal({
+      title: 'リマインダー時刻',
+      body: '通知を出す時刻を設定します(ブラウザの通知許可が必要)。空欄で解除。',
+      okText: '保存',
+      extra: `<div class="field"><input type="time" id="modal-time" value="${state.settings.reminderTime || ''}" /></div>`,
+      onOk: async () => {
+        const v = document.getElementById('modal-time').value;
+        await setupReminder(v);
+        renderSettings();
+        showToast(v ? `${v} に通知します` : '解除しました');
+      }
+    });
+  });
+  document.getElementById('set-export').addEventListener('click', exportJSON);
+  document.getElementById('set-delete').addEventListener('click', deleteAll);
+
+  // Detail delete
+  document.getElementById('detail-delete').addEventListener('click', () => {
+    if (!detailEntryId) return;
+    openModal({
+      title: 'この記録を削除しますか?',
+      body: '取り消せません。',
+      okText: '削除',
+      onOk: () => {
+        deleteEntry(detailEntryId);
+        detailEntryId = null;
+        goScreen('review');
+        showToast('削除しました');
+      }
+    });
+  });
+
+  // Modal buttons
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-ok').addEventListener('click', () => {
+    const cb = modalOnOk;
+    closeModal();
+    if (cb) cb();
+  });
+  document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target.id === 'modal') closeModal();
+  });
+}
+
+// ----- Boot -----
+function boot() {
+  const loaded = load();
+  wire();
+  if (!loaded || !state.settings.onboarded) {
+    startOnboarding();
+  } else {
+    document.getElementById('app').style.display = 'block';
+    goScreen('home');
+    scheduleReminder();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+
+// Expose for testing
+window.__kokoro = {
+  get state() { return state; },
+  setState(s) { state = s; save(); },
+  reset() { localStorage.removeItem(STORAGE_KEY); state = defaultState(); },
+  addEntry, deleteEntry, recomputeStreak, todayKey, daysBetween, todayPrompt, methodLabel,
+  goScreen, showWriteMethod, handleSave, handleSkip,
+  startTimer, stopTimer, resetTimer, toggleTimer,
+  exportJSON, openModal, closeModal,
+  PROMPTS
+};
+</script>
+</body>
+</html>
