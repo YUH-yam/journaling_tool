@@ -1,22 +1,40 @@
 :root {
-  color-scheme: light dark;
-  --bg: #f6f7f9;
+  color-scheme: light;
+  --bg: #f4f6f4;
   --surface: #ffffff;
-  --surface-soft: #eef1f5;
-  --line: rgba(60, 60, 67, 0.16);
+  --surface-soft: #edf1ef;
+  --line: rgba(44, 54, 50, 0.14);
   --text: #1d1d1f;
-  --subtext: rgba(60, 60, 67, 0.72);
-  --muted: rgba(60, 60, 67, 0.5);
-  --blue: #007aff;
-  --blue-soft: rgba(0, 122, 255, 0.13);
-  --green: #1f8a45;
-  --green-soft: rgba(52, 199, 89, 0.16);
-  --orange: #b86200;
-  --orange-soft: rgba(255, 159, 10, 0.18);
-  --red: #d70015;
-  --radius: 16px;
+  --subtext: rgba(47, 55, 52, 0.72);
+  --muted: rgba(47, 55, 52, 0.5);
+  --blue: #3f6f75;
+  --blue-soft: rgba(63, 111, 117, 0.14);
+  --green: #3f7552;
+  --green-soft: rgba(63, 117, 82, 0.15);
+  --orange: #94672e;
+  --orange-soft: rgba(148, 103, 46, 0.16);
+  --red: #b93f3a;
+  --radius: 14px;
   --touch: 44px;
   --nav-height: 78px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1110;
+  --surface: #1c1c1e;
+  --surface-soft: rgba(118, 118, 128, 0.24);
+  --line: rgba(84, 84, 88, 0.66);
+  --text: #f5f5f7;
+  --subtext: rgba(235, 235, 245, 0.68);
+  --muted: rgba(235, 235, 245, 0.45);
+  --blue: #79b3b8;
+  --blue-soft: rgba(121, 179, 184, 0.22);
+  --green: #82c79b;
+  --green-soft: rgba(130, 199, 155, 0.18);
+  --orange: #d6a15d;
+  --orange-soft: rgba(214, 161, 93, 0.2);
+  --red: #ff453a;
 }
 
 * {
@@ -27,6 +45,8 @@ html {
   min-height: 100%;
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
+  font-synthesis: none;
+  font-synthesis-weight: none;
 }
 
 body {
@@ -34,16 +54,27 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Segoe UI", sans-serif;
+  font-family: "Hiragino Sans W3", "Hiragino Sans", "Hiragino Kaku Gothic ProN", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Yu Gothic", "YuGothic", "Segoe UI", sans-serif;
   font-size: 17px;
-  line-height: 1.48;
+  font-weight: 300;
+  line-height: 1.55;
   letter-spacing: 0;
+  font-synthesis: none;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
 input,
 select {
   font: inherit;
+  font-weight: 300;
+}
+
+strong,
+b {
+  font-weight: 300;
 }
 
 button {
@@ -69,9 +100,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: calc(56px + env(safe-area-inset-top));
-  padding: calc(8px + env(safe-area-inset-top)) 18px 8px;
-  background: rgba(246, 247, 249, 0.86);
+  min-height: calc(52px + env(safe-area-inset-top));
+  padding: calc(7px + env(safe-area-inset-top)) 18px 7px;
+  background: rgba(244, 246, 244, 0.88);
   border-bottom: 0.5px solid var(--line);
   backdrop-filter: blur(22px) saturate(180%);
 }
@@ -86,22 +117,21 @@ a {
 
 .app-header h1 {
   font-size: 1rem;
-  font-weight: 540;
+  font-weight: 300;
 }
 
 .caption {
   margin: 0 0 3px;
-  color: var(--subtext);
+  color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 520;
+  font-weight: 300;
   letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .content {
   position: relative;
   z-index: 1;
-  padding: 16px;
+  padding: 14px;
 }
 
 .view {
@@ -110,17 +140,25 @@ a {
 
 .view.active {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .screen-title {
-  padding: 4px 2px 8px;
+  padding: 2px 2px 6px;
 }
 
 .screen-title h2 {
-  font-size: 2rem;
-  font-weight: 540;
-  line-height: 1.08;
+  font-size: 1.52rem;
+  font-weight: 300;
+  line-height: 1.18;
+}
+
+.screen-lead,
+.panel-subtext {
+  margin: 5px 0 0;
+  color: var(--subtext);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .status-card,
@@ -137,22 +175,23 @@ a {
 .status-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
-  padding: 16px;
+  padding: 14px;
 }
 
 .status-card p {
-  margin: 9px 0 0;
+  margin: 8px 0 0;
   color: var(--subtext);
-  line-height: 1.58;
+  font-size: 0.98rem;
+  line-height: 1.55;
 }
 
 .rhythm-summary {
   display: grid;
   place-items: center;
-  min-width: 84px;
-  min-height: 54px;
+  min-width: 78px;
+  min-height: 52px;
   padding: 8px 10px;
   color: var(--blue);
   text-align: center;
@@ -163,7 +202,7 @@ a {
 .rhythm-summary span {
   display: block;
   font-size: 1.18rem;
-  font-weight: 540;
+  font-weight: 300;
   line-height: 1;
 }
 
@@ -172,15 +211,15 @@ a {
   margin-top: 5px;
   color: var(--subtext);
   font-size: 0.68rem;
-  font-weight: 500;
+  font-weight: 300;
 }
 
 .panel,
 .prompt-panel,
 .timer-panel {
   display: grid;
-  gap: 13px;
-  padding: 16px;
+  gap: 11px;
+  padding: 14px;
 }
 
 .starter-panel {
@@ -201,8 +240,8 @@ a {
 .panel h3,
 .prompt-panel h3,
 .timer-panel h3 {
-  font-size: 1.08rem;
-  font-weight: 520;
+  font-size: 1.04rem;
+  font-weight: 300;
   line-height: 1.3;
 }
 
@@ -235,7 +274,7 @@ a {
   background: var(--surface-soft);
   border: 0;
   border-radius: 999px;
-  font-weight: 470;
+  font-weight: 300;
   white-space: nowrap;
 }
 
@@ -252,16 +291,22 @@ a {
 }
 
 .picker-panel .field-grid {
-  grid-template-columns: minmax(0, 1fr) 128px;
-  align-items: end;
+  grid-template-columns: 1fr;
 }
 
 label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   color: var(--subtext);
   font-size: 0.9rem;
-  font-weight: 560;
+  font-weight: 300;
+}
+
+label small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 300;
+  line-height: 1.4;
 }
 
 select,
@@ -271,7 +316,7 @@ input[type="text"] {
   padding: 10px 12px;
   color: var(--text);
   background: var(--surface-soft);
-  border: 0;
+  border: 0.5px solid transparent;
   border-radius: 12px;
 }
 
@@ -296,7 +341,7 @@ output {
   background: var(--blue-soft);
   border-radius: 999px;
   font-size: 0.95rem;
-  font-weight: 520;
+  font-weight: 300;
 }
 
 .prompt-list {
@@ -310,6 +355,8 @@ output {
 
 .prompt-list li {
   position: relative;
+  display: flex;
+  align-items: center;
   min-height: var(--touch);
   padding: 11px 12px 11px 42px;
   color: var(--text);
@@ -320,7 +367,7 @@ output {
 
 .prompt-list li::before {
   position: absolute;
-  top: 12px;
+  top: 50%;
   left: 12px;
   display: grid;
   place-items: center;
@@ -330,9 +377,10 @@ output {
   background: var(--blue);
   border-radius: 50%;
   font-size: 0.72rem;
-  font-weight: 520;
+  font-weight: 300;
   content: counter(prompt);
   counter-increment: prompt;
+  transform: translateY(-50%);
 }
 
 .compact-list li {
@@ -355,28 +403,31 @@ output {
 
 .paper-code strong {
   color: var(--text);
-  font-weight: 520;
+  font-weight: 300;
   font-variant-numeric: tabular-nums;
 }
 
 .timer-panel {
   gap: 12px;
-  padding: 18px 16px;
+  padding: 16px 15px;
 }
 
 .timer-head {
-  text-align: center;
+  display: grid;
+  gap: 3px;
+  text-align: left;
 }
 
 .timer-face {
   display: grid;
   place-items: center;
-  min-height: 112px;
+  min-height: 108px;
   color: var(--text);
   background: var(--surface-soft);
+  border: 0.5px solid var(--line);
   border-radius: 16px;
-  font-size: clamp(3.2rem, 17vw, 4.6rem);
-  font-weight: 420;
+  font-size: clamp(3.45rem, 17vw, 4.7rem);
+  font-weight: 300;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -423,7 +474,7 @@ output {
   border: 0;
   border-radius: 12px;
   cursor: pointer;
-  font-weight: 520;
+  font-weight: 300;
 }
 
 .primary-button {
@@ -472,7 +523,7 @@ output {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 520;
+  font-weight: 300;
 }
 
 .pill-safe {
@@ -509,13 +560,13 @@ output {
 .review-grid span {
   color: var(--subtext);
   font-size: 0.8rem;
-  font-weight: 560;
+  font-weight: 300;
 }
 
 .metric-row strong,
 .review-grid strong {
   font-size: 1.45rem;
-  font-weight: 520;
+  font-weight: 300;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -535,7 +586,7 @@ output {
   background: var(--surface-soft);
   border-radius: 9px;
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 300;
 }
 
 .progress-dot.done {
@@ -561,6 +612,11 @@ output {
   padding: 14px;
 }
 
+.template-card strong,
+.history-item strong {
+  font-weight: 300;
+}
+
 .template-card button {
   justify-self: start;
 }
@@ -581,19 +637,89 @@ output {
   justify-content: space-between;
 }
 
-.toggle-row strong,
+.toggle-title,
 .toggle-row small {
   display: block;
 }
 
-.toggle-row strong {
-  font-weight: 520;
+.toggle-title {
+  color: var(--text);
+  font-weight: 300;
+}
+
+.theme-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.theme-field legend {
+  padding: 0;
+  color: var(--subtext);
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+.theme-field small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  min-height: var(--touch);
+  padding: 4px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+}
+
+.segmented-control label {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: var(--touch);
+  place-items: center;
+  color: var(--subtext);
+  font-size: 0.88rem;
+  text-align: center;
+  border-radius: 9px;
+}
+
+.segmented-control input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented-control span {
+  display: grid;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--touch);
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 9px;
+}
+
+.segmented-control input:checked + span {
+  color: var(--blue);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 0.5px var(--line);
 }
 
 .toggle-row small {
   margin-top: 4px;
   color: var(--subtext);
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.45;
 }
 
@@ -611,22 +737,6 @@ output {
 
 .file-button input {
   display: none;
-}
-
-.source-panel {
-  gap: 0;
-  overflow: hidden;
-}
-
-.source-panel .panel-head {
-  margin-bottom: 6px;
-}
-
-.source-panel a {
-  display: block;
-  padding: 13px 0;
-  border-top: 0.5px solid var(--line);
-  line-height: 1.45;
 }
 
 .bottom-nav {
@@ -662,7 +772,7 @@ output {
   border: 0;
   border-radius: 14px;
   font-size: 0.86rem;
-  font-weight: 500;
+  font-weight: 300;
 }
 
 .nav-item.active {
@@ -723,7 +833,7 @@ output {
   }
 
   .screen-title h2 {
-    font-size: 1.9rem;
+    font-size: 1.46rem;
   }
 
   .rhythm-summary {
@@ -732,28 +842,40 @@ output {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000000;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d1110;
     --surface: #1c1c1e;
     --surface-soft: rgba(118, 118, 128, 0.24);
     --line: rgba(84, 84, 88, 0.66);
     --text: #f5f5f7;
     --subtext: rgba(235, 235, 245, 0.68);
     --muted: rgba(235, 235, 245, 0.45);
-    --blue: #0a84ff;
-    --blue-soft: rgba(10, 132, 255, 0.22);
-    --green: #30d158;
-    --green-soft: rgba(48, 209, 88, 0.18);
-    --orange: #ff9f0a;
-    --orange-soft: rgba(255, 159, 10, 0.2);
+    --blue: #79b3b8;
+    --blue-soft: rgba(121, 179, 184, 0.22);
+    --green: #82c79b;
+    --green-soft: rgba(130, 199, 155, 0.18);
+    --orange: #d6a15d;
+    --orange-soft: rgba(214, 161, 93, 0.2);
     --red: #ff453a;
   }
 
-  .app-header {
-    background: rgba(0, 0, 0, 0.78);
+}
+
+:root[data-theme="dark"] .app-header {
+  background: rgba(13, 17, 16, 0.78);
+}
+
+:root[data-theme="dark"] .bottom-nav {
+  background: rgba(28, 28, 30, 0.86);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .app-header {
+    background: rgba(13, 17, 16, 0.78);
   }
 
-  .bottom-nav {
+  :root:not([data-theme="light"]) .bottom-nav {
     background: rgba(28, 28, 30, 0.86);
   }
 }

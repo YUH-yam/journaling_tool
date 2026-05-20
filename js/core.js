@@ -1,4 +1,4 @@
-export const APP_VERSION = "1.0.0";
+export const APP_VERSION = "1.2.0";
 
 export const MODES = [
   {
@@ -339,7 +339,7 @@ export function calculateStats(entries, todayIso = isoDate()) {
     guard = {
       status: "protect",
       title: "二日空けない日",
-      detail: "30秒レスキューで十分です。連続記録を守るより、再開コストを下げます。"
+      detail: "1分レスキューで十分です。連続記録を守るより、再開コストを下げます。"
     };
   } else if (daysSinceLast !== null && daysSinceLast >= 2) {
     guard = {
@@ -440,6 +440,7 @@ export function sanitizeState(rawState) {
       trigger: rawState?.settings?.trigger || "夜の歯磨きが終わったら",
       action: rawState?.settings?.action || "ノートを開いて3行だけ書く",
       defaultMinutes: Number(rawState?.settings?.defaultMinutes || 3),
+      theme: ["light", "dark", "system"].includes(rawState?.settings?.theme) ? rawState.settings.theme : "system",
       privacyMode: rawState?.settings?.privacyMode !== false
     },
     entries: Array.isArray(rawState?.entries) ? rawState.entries : []

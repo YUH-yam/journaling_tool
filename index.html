@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f6f7f9">
+    <meta name="theme-color" content="#f4f6f4">
     <meta name="description" content="紙ノートでジャーナリングを続けるためのスマホ補助ツール">
     <meta name="application-name" content="Journal">
     <meta name="mobile-web-app-capable" content="yes">
@@ -21,8 +21,8 @@
     <div class="app-shell">
       <header class="app-header">
         <div>
-          <p class="caption">Journal</p>
-          <h1>紙に書くための補助</h1>
+          <p class="caption">紙ノート用</p>
+          <h1>今日のジャーナル</h1>
         </div>
         <button class="icon-button install-button hidden" type="button" title="ホーム画面に追加" aria-label="ホーム画面に追加">
           <span aria-hidden="true">＋</span>
@@ -33,70 +33,42 @@
         <section class="view active" id="view-today" aria-labelledby="today-title">
           <div class="screen-title">
             <p class="caption" id="today-date"></p>
-            <h2 id="today-title">今日</h2>
+            <h2 id="today-title">今日書くこと</h2>
+            <p class="screen-lead">上から順に進めるだけ。本文は紙に書きます。</p>
           </div>
 
           <section class="status-card" aria-label="今日の状態">
             <div>
-              <span class="pill pill-safe">本文は保存しない</span>
+              <span class="pill pill-safe">紙に本文を書く</span>
               <p id="guard-detail"></p>
             </div>
             <div class="rhythm-summary">
               <span id="rhythm-percent">0%</span>
-              <small>7日リズム</small>
+              <small>最近7日</small>
             </div>
           </section>
 
           <section class="panel picker-panel" aria-labelledby="selector-title">
             <div class="panel-head">
               <div>
-                <p class="caption">いまの状態</p>
-                <h3 id="selector-title">今日の型を選ぶ</h3>
+                <p class="caption">1. 型を選ぶ</p>
+                <h3 id="selector-title">今日に近いものを押す</h3>
               </div>
-              <button class="rescue-button" type="button">30秒</button>
+              <button class="rescue-button" type="button">1分だけ</button>
             </div>
             <div class="chip-row" id="issue-chips" role="listbox" aria-label="いまの状態"></div>
-            <div class="field-grid">
-              <label>
-                <span>気力</span>
-                <input id="energy-range" type="range" min="1" max="5" value="3">
-              </label>
-              <label>
-                <span>時間</span>
-                <select id="minutes-select">
-                  <option value="1">1分</option>
-                  <option value="3" selected>3分</option>
-                  <option value="5">5分</option>
-                  <option value="8">8分</option>
-                  <option value="10">10分</option>
-                </select>
-              </label>
-            </div>
-          </section>
-
-          <section class="timer-panel" aria-labelledby="timer-title">
-            <div class="timer-head">
-              <p class="caption">Timer</p>
-              <h3 id="timer-title">書く時間</h3>
-            </div>
-            <div class="timer-face" id="timer-face" aria-live="polite">03:00</div>
-            <div class="timer-bar" aria-hidden="true">
-              <span id="timer-progress"></span>
-            </div>
-            <div class="timer-actions">
-              <button class="primary-button" type="button" id="timer-toggle">開始</button>
-              <button class="secondary-button" type="button" id="timer-reset">リセット</button>
-            </div>
+            <p class="helper-text">ここは選ぶだけ。迷ったら何も変えずに進みます。</p>
           </section>
 
           <section class="prompt-panel" aria-live="polite">
             <div class="panel-head">
               <div>
-                <p class="caption" id="mode-cue"></p>
+                <p class="caption">2. 紙に写す</p>
                 <h3 id="mode-title"></h3>
+                <p class="panel-subtext" id="mode-cue"></p>
               </div>
               <div class="compact-actions">
-                <button class="icon-button" type="button" id="copy-prompt" title="問いをコピー" aria-label="問いをコピー">□</button>
+                <button class="icon-button" type="button" id="copy-prompt" title="問いをコピー" aria-label="問いをコピー">⧉</button>
                 <button class="icon-button" type="button" id="shuffle-mode" title="別の型を提案" aria-label="別の型を提案">↻</button>
               </div>
             </div>
@@ -109,51 +81,48 @@
             <p class="helper-text" id="close-note"></p>
           </section>
 
+          <section class="timer-panel" aria-labelledby="timer-title">
+            <div class="timer-head">
+              <p class="caption">3. 書く</p>
+              <h3 id="timer-title">タイマー</h3>
+              <p class="helper-text">紙に書き始めたら開始します。</p>
+            </div>
+            <div class="timer-face" id="timer-face" aria-live="polite">03:00</div>
+            <div class="timer-bar" aria-hidden="true">
+              <span id="timer-progress"></span>
+            </div>
+            <div class="timer-actions">
+              <button class="primary-button" type="button" id="timer-toggle">開始</button>
+              <button class="secondary-button" type="button" id="timer-reset">リセット</button>
+            </div>
+          </section>
+
           <section class="panel log-panel" aria-labelledby="log-title">
             <div class="panel-head">
               <div>
-                <p class="caption">Log</p>
-                <h3 id="log-title">書いた後だけ記録</h3>
+                <p class="caption">4. 記録</p>
+                <h3 id="log-title">終わったら押すだけ</h3>
               </div>
-              <span class="pill pill-safe">紙優先</span>
+              <span class="pill pill-safe">本文なし</span>
             </div>
-            <div class="field-grid">
-              <label>
-                <span>書く前</span>
-                <div class="range-with-value">
-                  <input id="mood-before" type="range" min="0" max="100" value="50">
-                  <output id="mood-before-value">50</output>
-                </div>
-              </label>
-              <label>
-                <span>書いた後</span>
-                <div class="range-with-value">
-                  <input id="mood-after" type="range" min="0" max="100" value="55">
-                  <output id="mood-after-value">55</output>
-                </div>
-              </label>
-            </div>
-            <label class="text-field">
-              <span>紙ノートのページメモ</span>
-              <input id="page-note" type="text" placeholder="例: p.12 / 紺の手帳">
-            </label>
-            <button class="primary-button full" type="button" id="complete-session">記録する</button>
+            <p class="helper-text">アプリには、書いた事実だけを残します。本文も感想も入力しません。</p>
+            <button class="primary-button full" type="button" id="complete-session">書けた</button>
           </section>
 
           <section class="panel starter-panel" aria-labelledby="starter-title">
             <div>
-              <p class="caption">14日プログラム</p>
+              <p class="caption">迷った時の順番</p>
               <h3 id="starter-title"></h3>
               <p id="starter-goal"></p>
             </div>
-            <button class="quiet-button" type="button" id="starter-mode-button">使う</button>
+            <button class="quiet-button" type="button" id="starter-mode-button">この型にする</button>
           </section>
         </section>
 
         <section class="view" id="view-templates" aria-labelledby="templates-title">
           <div class="screen-title">
-            <p class="caption">Library</p>
-            <h2 id="templates-title">型</h2>
+            <p class="caption">紙に写す型</p>
+            <h2 id="templates-title">型を選ぶ</h2>
           </div>
           <div class="chip-row" id="group-filters" aria-label="テンプレート分類"></div>
           <div class="template-list" id="template-list"></div>
@@ -161,8 +130,8 @@
 
         <section class="view" id="view-habit" aria-labelledby="habit-title">
           <div class="screen-title">
-            <p class="caption">Rhythm</p>
-            <h2 id="habit-title">習慣</h2>
+            <p class="caption">続けるための記録</p>
+            <h2 id="habit-title">習慣を見る</h2>
           </div>
           <section class="metric-row" aria-label="習慣の統計">
             <div>
@@ -182,16 +151,16 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="caption">If Then</p>
-                <h3>開始トリガー</h3>
+                <p class="caption">毎日の合図</p>
+                <h3>いつ書くか</h3>
               </div>
             </div>
             <label class="text-field">
-              <span>もし</span>
+              <span>このタイミングで</span>
               <input id="setting-trigger" type="text">
             </label>
             <label class="text-field">
-              <span>その時</span>
+              <span>この行動をする</span>
               <input id="setting-action" type="text">
             </label>
             <div class="ifthen-card" id="ifthen-plan"></div>
@@ -200,7 +169,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="caption">Progress</p>
+                <p class="caption">続ける順番</p>
                 <h3>14日プログラム</h3>
               </div>
             </div>
@@ -210,7 +179,7 @@
           <section class="panel weekly-summary">
             <div class="panel-head">
               <div>
-                <p class="caption">Weekly</p>
+                <p class="caption">週1回だけ</p>
                 <h3>週一だけ見返す</h3>
               </div>
               <button class="quiet-button" type="button" data-mode-shortcut="weekly">書く</button>
@@ -221,7 +190,7 @@
                 <strong id="top-mode">なし</strong>
               </div>
               <div>
-                <span>気分変化</span>
+                <span>今週の回数</span>
                 <strong id="mood-delta">0</strong>
               </div>
             </div>
@@ -231,7 +200,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="caption">Safety</p>
+                <p class="caption">無理しないために</p>
                 <h3>安全チェック</h3>
               </div>
             </div>
@@ -246,7 +215,7 @@
           <section class="panel">
             <div class="panel-head">
               <div>
-                <p class="caption">History</p>
+                <p class="caption">過去のメモ位置</p>
                 <h3>最近の記録</h3>
               </div>
             </div>
@@ -256,16 +225,24 @@
 
         <section class="view" id="view-settings" aria-labelledby="settings-title">
           <div class="screen-title">
-            <p class="caption">Settings</p>
+            <p class="caption">使いやすさ</p>
             <h2 id="settings-title">設定</h2>
           </div>
           <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="caption">基本</p>
+                <h3>いつもの設定</h3>
+              </div>
+            </div>
             <label class="text-field">
               <span>ノート名</span>
+              <small>例: 黒い手帳</small>
               <input id="setting-notebook" type="text">
             </label>
             <label class="text-field">
-              <span>標準時間</span>
+              <span>いつもの時間</span>
+              <small>今日画面を開いた時の初期値</small>
               <select id="setting-minutes">
                 <option value="1">1分</option>
                 <option value="3">3分</option>
@@ -274,15 +251,40 @@
                 <option value="10">10分</option>
               </select>
             </label>
+            <fieldset class="theme-field">
+              <legend>画面の明るさ</legend>
+              <small>読みやすい表示を選べます。</small>
+              <div class="segmented-control" role="radiogroup" aria-label="画面の明るさ">
+                <label>
+                  <input type="radio" name="setting-theme" value="light">
+                  <span>ライト</span>
+                </label>
+                <label>
+                  <input type="radio" name="setting-theme" value="dark">
+                  <span>ダーク</span>
+                </label>
+                <label>
+                  <input type="radio" name="setting-theme" value="system">
+                  <span>システム</span>
+                </label>
+              </div>
+            </fieldset>
             <label class="toggle-row">
               <span>
-                <strong>本文を保存しない</strong>
-                <small>保存するのは型、時間、気分、ページメモだけです。</small>
+                <span class="toggle-title">本文を保存しない</span>
+                <small>保存するのは型、時間、日付、紙コードだけです。</small>
               </span>
               <input id="setting-privacy" type="checkbox" checked>
             </label>
           </section>
           <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="caption">端末内のデータ</p>
+                <h3>記録の出し入れ</h3>
+              </div>
+            </div>
+            <p class="helper-text">本文は含まれません。この端末の実行ログだけを扱います。</p>
             <div class="button-stack">
               <button class="secondary-button" type="button" id="export-data">記録をエクスポート</button>
               <label class="secondary-button file-button">
@@ -291,18 +293,6 @@
               </label>
               <button class="danger-button" type="button" id="clear-data">ローカル記録を削除</button>
             </div>
-          </section>
-          <section class="panel source-panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">Sources</p>
-                <h3>設計に使った一次情報</h3>
-              </div>
-            </div>
-            <a href="https://developer.apple.com/design/tips/" target="_blank" rel="noreferrer">Apple: UI Design Dos and Don’ts</a>
-            <a href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noreferrer">W3C: WCAG 2.2</a>
-            <a href="https://www.mhlw.go.jp/kokoro/youth/stress/self/self_02.html" target="_blank" rel="noreferrer">厚生労働省: 今の気持ちを書いてみる</a>
-            <a href="https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/thought-record/" target="_blank" rel="noreferrer">NHS: Thought record</a>
           </section>
         </section>
       </main>

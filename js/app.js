@@ -28,6 +28,13 @@ const todayFormatter = new Intl.DateTimeFormat("ja-JP", {
   weekday: "short"
 });
 
+const THEME_COLORS = {
+  light: "#f4f6f4",
+  dark: "#0d1110"
+};
+
+const systemThemeQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+
 let state = loadState();
 let selectedIssue = "start";
 let selectedGroup = "all";
@@ -40,6 +47,8 @@ let timer = {
   intervalId: null
 };
 
+applyTheme(state.settings.theme);
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -51,6 +60,20 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, version: APP_VERSION }));
+}
+
+function resolvedTheme(theme = state.settings.theme) {
+  if (theme === "dark" || theme === "light") return theme;
+  return systemThemeQuery?.matches ? "dark" : "light";
+}
+
+function applyTheme(theme = "system") {
+  const safeTheme = ["light", "dark", "system"].includes(theme) ? theme : "system";
+  document.documentElement.dataset.theme = safeTheme;
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute("content", THEME_COLORS[resolvedTheme(safeTheme)]);
+  }
 }
 
 function setView(viewName) {
@@ -76,7 +99,7 @@ function setMode(modeId, options = {}) {
   state.currentModeId = modeId;
   isRescue = Boolean(options.rescue);
   const mode = getMode(modeId);
-  const minutes = options.minutes || Math.min(Number($("#minutes-select")?.value || mode.duration), mode.duration);
+  const minutes = options.minutes || Math.min(Number(state.settings.defaultMinutes || mode.duration), mode.duration);
   timer.duration = minutes * 60;
   timer.remaining = timer.duration;
   stopTimer();
@@ -125,7 +148,7 @@ function render() {
   const week = summarizeWeek(state.entries, today);
 
   $("#today-date").textContent = todayFormatter.format(new Date());
-  $("#guard-detail").textContent = `${stats.guard.title}。${stats.guard.detail}`;
+  $("#guard-detail").textContent = `${stats.guard.title}: ${stats.guard.detail}`;
   $("#rhythm-percent").textContent = `${stats.rhythmPercent}%`;
   $("#starter-title").textContent = `${step.dayNumber}日目: ${step.title.replace(/^[^:]+: /, "")}`;
   $("#starter-goal").textContent = step.goal;
@@ -134,7 +157,6 @@ function render() {
   renderGroupFilters();
   renderPrompt(mode);
   renderTimer();
-  renderMoodOutputs();
   renderTemplates();
   renderHabit(stats, step);
   renderReview(week);
@@ -158,15 +180,10 @@ function renderGroupFilters() {
 function renderPrompt(mode) {
   $("#mode-title").textContent = mode.title;
   $("#mode-cue").textContent = mode.cue;
-  $("#mode-fit").textContent = `${mode.bestFor}。目安 ${Math.round(timer.duration / 60)}分。`;
+  $("#mode-fit").textContent = `${mode.bestFor}。この順番で紙に書きます。目安 ${Math.round(timer.duration / 60)}分。`;
   $("#prompt-list").innerHTML = mode.prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
   $("#page-code").textContent = currentPageCode();
-  $("#close-note").textContent = mode.close;
-}
-
-function renderMoodOutputs() {
-  $("#mood-before-value").textContent = $("#mood-before").value;
-  $("#mood-after-value").textContent = $("#mood-after").value;
+  $("#close-note").textContent = `最後に: ${mode.close}`;
 }
 
 function renderTemplates() {
@@ -179,7 +196,7 @@ function renderTemplates() {
       </header>
       <p>${escapeHtml(mode.bestFor)}</p>
       <p>${escapeHtml(mode.cue)}</p>
-      <button class="small-button" type="button" data-mode-id="${mode.id}">今日使う</button>
+      <button class="small-button" type="button" data-mode-id="${mode.id}">この型にする</button>
     </article>
   `).join("");
 }
@@ -201,25 +218,23 @@ function renderHabit(stats, step) {
   $("#history-list").innerHTML = recent.length
     ? recent.map((entry) => {
       const mode = getMode(entry.modeId);
-      const delta = Number.isFinite(entry.moodAfter - entry.moodBefore) ? entry.moodAfter - entry.moodBefore : 0;
-      const sign = delta > 0 ? "+" : "";
       return `
         <article class="history-item">
           <header>
             <strong>${escapeHtml(entry.date)} ${escapeHtml(mode.shortTitle)}</strong>
             <span class="mode-tag">${escapeHtml(entry.pageCode || "")}</span>
           </header>
-          <p>${entry.minutes}分 / 気分 ${entry.moodBefore}→${entry.moodAfter} (${sign}${delta})${entry.rescue ? " / レスキュー" : ""}</p>
+          <p>${entry.minutes}分${entry.rescue ? " / 1分だけ" : ""}</p>
           ${entry.note ? `<p>${escapeHtml(entry.note)}</p>` : ""}
         </article>
       `;
     }).join("")
-    : `<p class="empty-state">まだ記録はありません。今日の3行から始めます。</p>`;
+    : `<p class="empty-state">まだ記録はありません。今日画面の1番上から始めます。</p>`;
 }
 
 function renderReview(week) {
   $("#top-mode").textContent = week.topMode ? week.topMode.title : "なし";
-  $("#mood-delta").textContent = `${week.averageMoodDelta > 0 ? "+" : ""}${week.averageMoodDelta}`;
+  $("#mood-delta").textContent = week.recent.length;
   $("#weekly-prompts").innerHTML = getMode("weekly").prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
 }
 
@@ -228,6 +243,9 @@ function renderSettings() {
   $("#setting-trigger").value = state.settings.trigger;
   $("#setting-action").value = state.settings.action;
   $("#setting-minutes").value = String(state.settings.defaultMinutes);
+  $$('input[name="setting-theme"]').forEach((input) => {
+    input.checked = input.value === state.settings.theme;
+  });
   $("#setting-privacy").checked = state.settings.privacyMode;
 }
 
@@ -250,7 +268,7 @@ async function copyPrompt() {
 
   try {
     await navigator.clipboard.writeText(text);
-    showToast("問いをコピーしました。紙に写して使えます。");
+    showToast("コピーしました。紙にそのまま写せます。");
   } catch {
     showToast(text);
   }
@@ -262,18 +280,17 @@ function completeSession() {
     date: today,
     modeId: state.currentModeId,
     minutes: Math.max(1, Math.round(timer.duration / 60)),
-    moodBefore: $("#mood-before").value,
-    moodAfter: $("#mood-after").value,
+    moodBefore: 50,
+    moodAfter: 50,
     rescue: isRescue,
     pageCode: currentPageCode(),
-    note: $("#page-note").value
+    note: ""
   });
   state.entries.push(entry);
-  $("#page-note").value = "";
   isRescue = false;
   saveState();
   render();
-  showToast("記録しました。本文はこの端末に保存していません。");
+  showToast("記録しました。紙の本文は保存していません。");
 }
 
 function updateSettingsFromInputs({ rerender = true } = {}) {
@@ -281,7 +298,9 @@ function updateSettingsFromInputs({ rerender = true } = {}) {
   state.settings.trigger = $("#setting-trigger").value.trim() || "夜の歯磨きが終わったら";
   state.settings.action = $("#setting-action").value.trim() || "ノートを開いて3行だけ書く";
   state.settings.defaultMinutes = Number($("#setting-minutes").value || 3);
+  state.settings.theme = $('input[name="setting-theme"]:checked')?.value || "system";
   state.settings.privacyMode = $("#setting-privacy").checked;
+  applyTheme(state.settings.theme);
   saveState();
   if (rerender) {
     render();
@@ -347,10 +366,10 @@ function bindEvents() {
     selectedIssue = button.dataset.issue;
     const modeId = recommendMode({
       issue: selectedIssue,
-      energy: Number($("#energy-range").value),
-      minutes: Number($("#minutes-select").value)
+      energy: 3,
+      minutes: state.settings.defaultMinutes
     });
-    setMode(modeId, { minutes: Number($("#minutes-select").value) });
+    setMode(modeId);
   });
 
   $("#group-filters").addEventListener("click", (event) => {
@@ -379,22 +398,8 @@ function bindEvents() {
   });
 
   $(".rescue-button").addEventListener("click", () => {
-    $("#minutes-select").value = "1";
     setMode("quick3", { rescue: true, minutes: 1 });
-    showToast("30秒レスキューに切り替えました。1行でも記録できます。");
-  });
-
-  $("#energy-range").addEventListener("input", () => {
-    const modeId = recommendMode({
-      issue: selectedIssue,
-      energy: Number($("#energy-range").value),
-      minutes: Number($("#minutes-select").value)
-    });
-    setMode(modeId, { minutes: Number($("#minutes-select").value) });
-  });
-
-  $("#minutes-select").addEventListener("change", () => {
-    setMode(state.currentModeId, { minutes: Number($("#minutes-select").value), rescue: isRescue });
+    showToast("1分レスキューに切り替えました。1行でも記録できます。");
   });
 
   $("#copy-prompt").addEventListener("click", copyPrompt);
@@ -420,12 +425,13 @@ function bindEvents() {
     renderTimer();
   });
 
-  $("#mood-before").addEventListener("input", renderMoodOutputs);
-  $("#mood-after").addEventListener("input", renderMoodOutputs);
   $("#complete-session").addEventListener("click", completeSession);
 
   ["#setting-notebook", "#setting-trigger", "#setting-action", "#setting-minutes", "#setting-privacy"].forEach((selector) => {
     $(selector).addEventListener("change", updateSettingsFromInputs);
+  });
+  $$('input[name="setting-theme"]').forEach((input) => {
+    input.addEventListener("change", updateSettingsFromInputs);
   });
   $("#setting-trigger").addEventListener("input", () => updateSettingsFromInputs({ rerender: false }));
   $("#setting-action").addEventListener("input", () => updateSettingsFromInputs({ rerender: false }));
@@ -455,7 +461,9 @@ function bindEvents() {
 }
 
 function boot() {
-  $("#minutes-select").value = String(state.settings.defaultMinutes);
+  systemThemeQuery?.addEventListener?.("change", () => {
+    if (state.settings.theme === "system") applyTheme("system");
+  });
   timer.duration = state.settings.defaultMinutes * 60;
   timer.remaining = timer.duration;
   bindEvents();

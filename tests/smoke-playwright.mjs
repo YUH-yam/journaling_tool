@@ -60,25 +60,30 @@ try {
   });
   await mobile.getByRole("button", { name: "不安" }).click();
   const afterIssue = await mobile.locator("#mode-title").textContent();
-  await mobile.getByRole("button", { name: "30秒" }).click();
+  await mobile.getByRole("button", { name: "1分だけ" }).click();
   const rescueTitle = await mobile.locator("#mode-title").textContent();
   const timerText = await mobile.locator("#timer-face").textContent();
 
-  await mobile.locator("#mood-before").evaluate((el) => {
-    el.value = 35;
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await mobile.locator("#mood-after").evaluate((el) => {
-    el.value = 48;
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await mobile.locator("#page-note").fill("p.1");
-  await mobile.getByRole("button", { name: "記録する" }).click();
+  await mobile.getByRole("button", { name: "書けた" }).click();
   await mobile.getByRole("button", { name: "習慣" }).click();
 
   const days = await mobile.locator("#stat-days").textContent();
   const rescue = await mobile.locator("#stat-rescue").textContent();
   const stored = await mobile.evaluate(() => JSON.parse(localStorage.getItem("journaling-coach-state")));
+  await mobile.getByRole("button", { name: "設定", exact: true }).click();
+  await mobile.getByRole("radio", { name: "ダーク" }).check();
+  const darkTheme = await mobile.evaluate(() => ({
+    dataTheme: document.documentElement.dataset.theme,
+    themeColor: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
+    storedTheme: JSON.parse(localStorage.getItem("journaling-coach-state")).settings.theme
+  }));
+  await mobile.reload({ waitUntil: "networkidle" });
+  const persistedTheme = await mobile.evaluate(() => document.documentElement.dataset.theme);
+  await mobile.getByRole("radio", { name: "システム" }).check();
+  const systemTheme = await mobile.evaluate(() => ({
+    dataTheme: document.documentElement.dataset.theme,
+    storedTheme: JSON.parse(localStorage.getItem("journaling-coach-state")).settings.theme
+  }));
   const mobileViews = ["今日", "型", "習慣", "設定"];
   const mobileOverflow = [];
   const touchIssues = [];
@@ -119,6 +124,9 @@ try {
     manifestIconCount: manifest.icons.length,
     manifestShortcutCount: manifest.shortcuts.length,
     iconStatus,
+    darkTheme,
+    persistedTheme,
+    systemTheme,
     hashReviewTitle,
     offlineTitle,
     mobileOverflow,
@@ -137,11 +145,18 @@ try {
   if (manifest.display !== "standalone") throw new Error("Manifest display is not standalone");
   if (!manifest.icons.some((icon) => icon.purpose === "maskable")) throw new Error("Maskable icon is missing");
   if (manifest.shortcuts.length < 3) throw new Error("Manifest shortcuts are missing");
+  if (darkTheme.dataTheme !== "dark" || darkTheme.storedTheme !== "dark" || darkTheme.themeColor !== "#0d1110") {
+    throw new Error(`Dark theme did not apply: ${JSON.stringify(darkTheme)}`);
+  }
+  if (persistedTheme !== "dark") throw new Error("Dark theme did not persist after reload");
+  if (systemTheme.dataTheme !== "system" || systemTheme.storedTheme !== "system") {
+    throw new Error(`System theme did not apply: ${JSON.stringify(systemTheme)}`);
+  }
   if (iconStatus.some((item) => !item.ok || !item.contentType?.includes("image/png"))) {
     throw new Error(`PWA PNG icon check failed: ${JSON.stringify(iconStatus)}`);
   }
-  if (hashReviewTitle !== "習慣") throw new Error("Legacy review hash did not open habit view");
-  if (offlineTitle !== "型") throw new Error("Offline fallback did not serve app shell");
+  if (hashReviewTitle !== "習慣を見る") throw new Error("Legacy review hash did not open habit view");
+  if (offlineTitle !== "型を選ぶ") throw new Error("Offline fallback did not serve app shell");
   if (mobileOverflow.length) throw new Error(`Mobile overflow in views: ${mobileOverflow.join(", ")}`);
   if (touchIssues.length) throw new Error(`Small tap targets found: ${JSON.stringify(touchIssues.slice(0, 8))}`);
   if (desktopOverflow) throw new Error("Desktop overflow found");
