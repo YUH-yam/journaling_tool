@@ -8,6 +8,7 @@
 - 三日坊主を防ぐために、30秒レスキューと「二日空けない」ガードを置く
 - 紙ノート運用を崩さないように、記録本文は保存しない
 - 週一回だけ見返す流れを作り、反すうを避ける
+- 今日 / 型 / 習慣 / 設定の4タブで、スマホ片手操作に寄せる
 
 ## 実行
 
@@ -42,4 +43,6 @@ PWA用に `manifest.webmanifest`、`sw.js`、PNGアイコン、maskableアイコ
 - 厚生労働省「今の気持ちを書いてみる」
 - NHS Every Mind Matters「Thought record」
 - Lally et al. 2010「How are habits formed」
+- Apple「UI Design Dos and Don'ts」
+- W3C「WCAG 2.2」
 - 添付4ファイルの初心者向けテンプレート、習慣化、注意点

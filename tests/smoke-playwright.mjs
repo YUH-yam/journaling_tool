@@ -73,13 +73,13 @@ try {
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await mobile.locator("#page-note").fill("p.1");
-  await mobile.getByRole("button", { name: "書いたので記録する" }).click();
+  await mobile.getByRole("button", { name: "記録する" }).click();
   await mobile.getByRole("button", { name: "習慣" }).click();
 
   const days = await mobile.locator("#stat-days").textContent();
   const rescue = await mobile.locator("#stat-rescue").textContent();
   const stored = await mobile.evaluate(() => JSON.parse(localStorage.getItem("journaling-coach-state")));
-  const mobileViews = ["今日", "型", "習慣", "週次", "設定"];
+  const mobileViews = ["今日", "型", "習慣", "設定"];
   const mobileOverflow = [];
   const touchIssues = [];
   for (const name of mobileViews) {
@@ -88,7 +88,7 @@ try {
     touchIssues.push(...await smallTapTargets(mobile));
   }
   await mobile.goto(`${baseUrl}#review`, { waitUntil: "networkidle" });
-  const hashReviewTitle = await mobile.locator("#review-title").textContent();
+  const hashReviewTitle = await mobile.locator("#habit-title").textContent();
   await mobile.context().setOffline(true);
   await mobile.goto(`${baseUrl}#templates`, { waitUntil: "domcontentloaded" });
   await mobile.waitForSelector("#templates-title");
@@ -140,8 +140,8 @@ try {
   if (iconStatus.some((item) => !item.ok || !item.contentType?.includes("image/png"))) {
     throw new Error(`PWA PNG icon check failed: ${JSON.stringify(iconStatus)}`);
   }
-  if (hashReviewTitle !== "週一だけ見返す") throw new Error("Hash shortcut did not open review view");
-  if (offlineTitle !== "紙に写す型") throw new Error("Offline fallback did not serve app shell");
+  if (hashReviewTitle !== "習慣") throw new Error("Legacy review hash did not open habit view");
+  if (offlineTitle !== "型") throw new Error("Offline fallback did not serve app shell");
   if (mobileOverflow.length) throw new Error(`Mobile overflow in views: ${mobileOverflow.join(", ")}`);
   if (touchIssues.length) throw new Error(`Small tap targets found: ${JSON.stringify(touchIssues.slice(0, 8))}`);
   if (desktopOverflow) throw new Error("Desktop overflow found");

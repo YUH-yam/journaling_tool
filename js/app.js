@@ -54,6 +54,8 @@ function saveState() {
 }
 
 function setView(viewName) {
+  if (viewName === "review") viewName = "habit";
+  if (!$(`#view-${viewName}`)) viewName = "today";
   $$(".view").forEach((view) => view.classList.toggle("active", view.id === `view-${viewName}`));
   $$(".nav-item").forEach((item) => {
     const isActive = item.dataset.view === viewName;
@@ -177,7 +179,7 @@ function renderTemplates() {
       </header>
       <p>${escapeHtml(mode.bestFor)}</p>
       <p>${escapeHtml(mode.cue)}</p>
-      <button class="small-button" type="button" data-mode-id="${mode.id}">この型にする</button>
+      <button class="small-button" type="button" data-mode-id="${mode.id}">今日使う</button>
     </article>
   `).join("");
 }
@@ -448,7 +450,7 @@ function bindEvents() {
 
   window.addEventListener("hashchange", () => {
     const viewName = location.hash.replace("#", "") || "today";
-    if ($(`#view-${viewName}`)) setView(viewName);
+    setView(viewName);
   });
 }
 
@@ -459,7 +461,7 @@ function boot() {
   bindEvents();
   render();
   const initialView = location.hash.replace("#", "") || "today";
-  if ($(`#view-${initialView}`)) setView(initialView);
+  setView(initialView);
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {
