@@ -1,0 +1,65 @@
+{
+  "name": "Journaling Coach",
+  "short_name": "Journal",
+  "description": "紙ノートでジャーナリングを続けるためのスマホ補助ツール",
+  "id": "/journaling-support-tool/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "lang": "ja-JP",
+  "dir": "ltr",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
+  "categories": ["productivity", "health", "lifestyle"],
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日の問い",
+      "short_name": "今日",
+      "description": "今日のジャーナリング補助を開く",
+      "url": "./index.html#today",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "紙に写す型",
+      "short_name": "型",
+      "description": "テンプレート一覧を開く",
+      "url": "./index.html#templates",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "週次レビュー",
+      "short_name": "週次",
+      "description": "週一の振り返りを開く",
+      "url": "./index.html#review",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
