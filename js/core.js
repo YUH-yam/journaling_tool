@@ -385,13 +385,26 @@ export function buildIfThenPlan(trigger, action) {
   return `もし${normalizedTrigger}、${normalizedAction}。`;
 }
 
-export function makePageCode(dateIso, index = 1) {
-  const [, month, day] = dateIso.split("-");
-  return `J-${month}${day}-${pad(index)}`;
-}
-
-export function createEntry({ date = isoDate(), modeId, minutes, moodBefore, moodAfter, rescue = false, pageCode, note = "" }) {
+export function createEntry({
+  date = isoDate(),
+  modeId,
+  minutes,
+  moodBefore,
+  moodAfter,
+  rescue = false,
+  quoteId = "",
+  note = "",
+  startedAt,
+  completedAt,
+  elapsedSeconds
+}) {
   const mode = getMode(modeId);
+  const finishedAt = completedAt || new Date().toISOString();
+  const beganAt = startedAt || finishedAt;
+  const calculatedSeconds = Math.max(0, Math.round((new Date(finishedAt).getTime() - new Date(beganAt).getTime()) / 1000));
+  const safeElapsedSeconds = Number.isFinite(Number(elapsedSeconds))
+    ? Math.max(0, Math.round(Number(elapsedSeconds)))
+    : calculatedSeconds;
   return {
     id: `${date}-${Date.now()}`,
     date,
@@ -400,9 +413,12 @@ export function createEntry({ date = isoDate(), modeId, minutes, moodBefore, moo
     moodBefore: Number(moodBefore),
     moodAfter: Number(moodAfter),
     rescue: Boolean(rescue),
-    pageCode,
+    quoteId,
     note: note.trim(),
-    createdAt: new Date().toISOString()
+    startedAt: beganAt,
+    completedAt: finishedAt,
+    elapsedSeconds: safeElapsedSeconds,
+    createdAt: finishedAt
   };
 }
 

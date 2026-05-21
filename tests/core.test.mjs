@@ -7,7 +7,6 @@ import {
   diffDays,
   getMode,
   isoDate,
-  makePageCode,
   recommendMode,
   sanitizeState,
   starterStep,
@@ -69,7 +68,20 @@ test("sanitizeState keeps defaults and rejects malformed entries", () => {
   assert.equal(state.settings.defaultMinutes, 5);
   assert.deepEqual(state.entries, []);
   assert.equal(getMode("unknown").id, "quick3");
-  assert.equal(makePageCode("2026-05-20", 2), "J-0520-02");
+});
+
+test("createEntry keeps the quote id and elapsed log fields used during reflection", () => {
+  const entry = createEntry({
+    date: "2026-05-20",
+    modeId: "quick3",
+    quoteId: "q039",
+    startedAt: "2026-05-20T20:00:00.000Z",
+    completedAt: "2026-05-20T20:04:30.000Z"
+  });
+  assert.equal(entry.quoteId, "q039");
+  assert.equal(entry.startedAt, "2026-05-20T20:00:00.000Z");
+  assert.equal(entry.completedAt, "2026-05-20T20:04:30.000Z");
+  assert.equal(entry.elapsedSeconds, 270);
 });
 
 test("quote pool has about 400 sourced quotes and avoids repeats within a year", () => {

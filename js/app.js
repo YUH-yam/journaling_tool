@@ -5,10 +5,8 @@ import {
   buildIfThenPlan,
   calculateStats,
   createEntry,
-  entriesForDate,
   getMode,
   isoDate,
-  makePageCode,
   recommendMode,
   sanitizeState,
   starterStep,
@@ -25,6 +23,14 @@ const todayFormatter = new Intl.DateTimeFormat("ja-JP", {
   month: "long",
   day: "numeric",
   weekday: "short"
+});
+
+const logTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  month: "numeric",
+  day: "numeric",
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit"
 });
 
 const THEME_COLORS = {
@@ -45,10 +51,7 @@ const ICON_PATHS = {
   heart: '<path d="M20.8 5.8a5.4 5.4 0 0 0-7.6 0L12 7l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 22l8.8-8.6a5.4 5.4 0 0 0 0-7.6Z"/>',
   compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/>',
   dots: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
-  check: '<path d="M20 6 9 17l-5-5"/>',
-  bars: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
-  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.4.2.8.5 1.1.8"/>',
-  plus: '<path d="M12 5v14"/><path d="M5 12h14"/>'
+  bars: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>'
 };
 
 const ISSUE_ICONS = {
@@ -83,9 +86,9 @@ const systemThemeQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
 
 let state = loadState();
 let selectedIssue = "start";
-let currentStep = "gate";
+let currentStep = "settle";
+let sessionStartedAt = null;
 let introGate = sessionStorage.getItem("journaling-intro-seen") !== "1";
-let promptIndex = 0;
 let isRescue = false;
 let installPrompt = null;
 let timer = {
@@ -143,15 +146,27 @@ function setView(viewName) {
 }
 
 function setTodayStep(step) {
-  const safeStep = ["gate", "choose", "prompt", "timer", "complete"].includes(step) ? step : "gate";
+  const safeStep = ["settle", "choose", "write", "reflect"].includes(step) ? step : "settle";
+  const previousStep = currentStep;
   currentStep = safeStep;
+  if (safeStep === "write" && !["write", "reflect"].includes(previousStep)) {
+    sessionStartedAt = new Date().toISOString();
+  }
+  if (safeStep === "settle" || safeStep === "choose") {
+    sessionStartedAt = null;
+  }
   document.body.dataset.step = safeStep;
   document.body.dataset.introGate = String(introGate);
   $$(".today-step").forEach((section) => {
     section.classList.toggle("active", section.dataset.step === safeStep);
   });
-  if (safeStep === "prompt") promptIndex = Math.min(promptIndex, getMode(state.currentModeId).prompts.length - 1);
-  renderPrompt();
+  renderCompanion();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function markIntroSeen() {
+  introGate = false;
+  sessionStorage.setItem("journaling-intro-seen", "1");
 }
 
 function setMode(modeId, options = {}) {
@@ -161,15 +176,9 @@ function setMode(modeId, options = {}) {
   const minutes = Number(options.minutes || Math.min(state.settings.defaultMinutes || mode.duration, mode.duration));
   timer.duration = Math.max(1, minutes) * 60;
   timer.remaining = timer.duration;
-  promptIndex = 0;
   stopTimer();
   saveState();
   render();
-}
-
-function markIntroSeen() {
-  introGate = false;
-  sessionStorage.setItem("journaling-intro-seen", "1");
 }
 
 function stopTimer() {
@@ -184,18 +193,18 @@ function tickTimer() {
   if (timer.remaining > 0) timer.remaining -= 1;
   if (timer.remaining <= 0) {
     stopTimer();
-    showToast("時間です。最後の一文で閉じます。");
+    showToast("時間です。整理画面で紙を見返します。");
   }
   renderTimer();
 }
 
-function currentPageCode() {
-  const today = isoDate();
-  return makePageCode(today, entriesForDate(state.entries, today).length + 1);
+function currentQuote() {
+  return quoteForDate(isoDate());
 }
 
-function dailyQuoteText(quote) {
-  return `「${quote.text}」 ${quote.author} / ${quote.source}`;
+function setQuoteTargets(prefix, quote = currentQuote()) {
+  $(`#${prefix}-quote`).textContent = `「${quote.text}」`;
+  $(`#${prefix}-source`).textContent = `${quote.author} / ${quote.source}`;
 }
 
 function render() {
@@ -203,15 +212,14 @@ function render() {
   const stats = calculateStats(state.entries, today);
   const step = starterStep(state.entries);
   const recommended = getMode(step.modeId);
-  const quote = quoteForDate(today);
 
   $("#today-date").textContent = todayFormatter.format(new Date());
-  $("#daily-hint").textContent = dailyQuoteText(quote);
+  setQuoteTargets("daily");
   $("#recommended-title").textContent = recommended.title;
   $("#recommended-sub").textContent = `${step.dayNumber}日目。${step.goal}`;
 
   renderChoices();
-  renderPrompt();
+  renderCompanion();
   renderTimer();
   renderMethods();
   renderRhythm(stats, step);
@@ -233,31 +241,22 @@ function renderChoices() {
   }).join("");
 }
 
-function renderPrompt() {
+function renderCompanion() {
   const mode = getMode(state.currentModeId);
-  const prompts = mode.prompts.length ? mode.prompts : ["今、紙に置きたいことを一つ。"];
-  promptIndex = Math.max(0, Math.min(promptIndex, prompts.length - 1));
-  $("#mode-kicker").textContent = `${mode.title} · ${Math.round(timer.duration / 60)}分`;
-  $("#prompt-title").textContent = prompts[promptIndex];
-  $("#prompt-helper").textContent = promptIndex === prompts.length - 1
-    ? `最後に: ${mode.close}`
-    : "この問いだけ紙に写します。";
-  $("#prompt-count").textContent = `${promptIndex + 1} / ${prompts.length}`;
-  $("#prompt-progress").style.width = `${Math.round(((promptIndex + 1) / prompts.length) * 100)}%`;
-  $("#prompt-prev").disabled = promptIndex === 0;
-  $("#prompt-next").textContent = promptIndex === prompts.length - 1 ? "タイマーへ" : "次へ";
-  $("#timer-mode").textContent = mode.title;
-  $("#complete-summary").textContent = `${mode.title} · ${Math.round(timer.duration / 60)}分 · ${currentPageCode()}`;
+  $("#write-kicker").textContent = `紙の横に置く · ${Math.round(timer.duration / 60)}分`;
+  $("#write-title").textContent = mode.title;
+  $("#write-cue").textContent = mode.cue;
+  $("#prompt-stack").innerHTML = mode.prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
+  setQuoteTargets("write");
+  setQuoteTargets("reflect");
 }
 
 function renderTimer() {
   const minutes = Math.floor(timer.remaining / 60);
   const seconds = timer.remaining % 60;
   $("#timer-face").textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  const progress = timer.duration ? Math.round((1 - timer.remaining / timer.duration) * 100) : 0;
-  $("#timer-circle").style.setProperty("--timer-progress", `${Math.max(0, Math.min(100, progress))}%`);
   $("#timer-toggle").textContent = timer.running ? "一時停止" : "開始";
-  $("#timer-caption").textContent = timer.running ? "書いています" : "準備OK";
+  $("#timer-caption").textContent = timer.running ? "紙に書いています" : "画面を横に置いて開始";
 }
 
 function renderMethods() {
@@ -290,8 +289,7 @@ function renderRhythm(stats, step) {
   }).join("");
 
   const week = summarizeWeek(state.entries, isoDate());
-  const weekly = getMode("weekly").prompts;
-  $("#weekly-prompts").innerHTML = weekly.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
+  $("#weekly-prompts").innerHTML = getMode("weekly").prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
 
   const recent = [...state.entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
   $("#history-list").innerHTML = recent.length
@@ -299,12 +297,36 @@ function renderRhythm(stats, step) {
       const mode = getMode(entry.modeId);
       return `
         <article class="history-item">
-          <h4>${escapeHtml(entry.date)} ${escapeHtml(mode.shortTitle)}</h4>
-          <p>${entry.minutes}分 · ${escapeHtml(entry.pageCode || "")}${entry.rescue ? " · 1分救済" : ""}</p>
+          <h4>${escapeHtml(formatLogDateTime(entry))}</h4>
+          <dl class="log-details">
+            <div>
+              <dt>経過</dt>
+              <dd>${escapeHtml(formatElapsed(entry))}</dd>
+            </div>
+            <div>
+              <dt>型</dt>
+              <dd>${escapeHtml(mode.title)}</dd>
+            </div>
+          </dl>
+          ${entry.rescue ? `<p class="rescue-label">1分救済</p>` : ""}
         </article>
       `;
     }).join("")
     : `<p class="empty-state">まだ記録はありません。今日の画面から始めます。</p>`;
+
+  $("#quote-history").innerHTML = recent.length
+    ? recent.map((entry) => {
+      const quote = QUOTE_POOL.find((item) => item.id === entry.quoteId) || null;
+      if (!quote) return "";
+      return `
+        <article>
+          <h4>${escapeHtml(formatLogDateTime(entry))}</h4>
+          <p>「${escapeHtml(quote.text)}」</p>
+          <p>${escapeHtml(quote.author)} / ${escapeHtml(quote.source)}</p>
+        </article>
+      `;
+    }).join("") || `<p class="empty-state">次回から、整理で見た一言が残ります。</p>`
+    : `<p class="empty-state">整理まで進むと、今日の一言もここに残ります。</p>`;
 
   if (week.topMode) {
     $("#guard-detail").textContent = `${stats.guard.detail} 今週多い型は「${week.topMode.title}」です。`;
@@ -335,39 +357,48 @@ function updateSettingsFromInputs({ rerender = true } = {}) {
 }
 
 function completeSession() {
+  const quote = currentQuote();
+  const completedAt = new Date();
+  const startedAt = sessionStartedAt || completedAt.toISOString();
+  const elapsedSeconds = Math.max(0, Math.round((completedAt.getTime() - new Date(startedAt).getTime()) / 1000));
   const entry = createEntry({
     date: isoDate(),
     modeId: state.currentModeId,
-    minutes: Math.max(1, Math.round(timer.duration / 60)),
+    minutes: Math.max(1, Math.ceil(elapsedSeconds / 60)),
     moodBefore: 50,
     moodAfter: 50,
     rescue: isRescue,
-    pageCode: currentPageCode(),
+    startedAt,
+    completedAt: completedAt.toISOString(),
+    elapsedSeconds,
+    quoteId: quote.id,
     note: ""
   });
   state.entries.push(entry);
   isRescue = false;
+  sessionStartedAt = null;
   markIntroSeen();
   saveState();
   render();
-  setTodayStep("gate");
-  showToast("記録しました。本文は保存していません。");
+  setTodayStep("settle");
+  showToast("記録しました。本文は紙の中だけです。");
 }
 
 async function copyPrompts() {
   const mode = getMode(state.currentModeId);
-  const quote = quoteForDate(isoDate());
+  const quote = currentQuote();
   const text = [
-    `${mode.title} ${currentPageCode()}`,
+    `${mode.title}`,
     `今日の一言: ${quote.text} (${quote.author} / ${quote.source})`,
     ...mode.prompts,
+    `整理: 今日の一言と近い行に線を引く`,
     `最後: ${mode.close}`
   ].join("\n");
   try {
     await navigator.clipboard.writeText(text);
-    showToast("紙に写す問いをコピーしました。");
+    showToast("問いと一言をコピーしました。");
   } catch {
-    showToast("コピーできませんでした。画面の問いを紙に写してください。");
+    showToast("コピーできませんでした。画面を見ながら紙に書いてください。");
   }
 }
 
@@ -404,7 +435,7 @@ function clearData() {
   state = sanitizeState({});
   saveState();
   setMode("quick3", { minutes: 3 });
-  setTodayStep("gate");
+  setTodayStep("settle");
   showToast("ローカル記録を削除しました。");
 }
 
@@ -415,6 +446,22 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function formatLogDateTime(entry) {
+  const value = entry.startedAt || entry.completedAt || entry.createdAt || `${entry.date}T00:00:00`;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return entry.date || "";
+  return logTimeFormatter.format(date);
+}
+
+function formatElapsed(entry) {
+  const seconds = Number(entry.elapsedSeconds);
+  if (Number.isFinite(seconds)) {
+    if (seconds < 60) return "1分未満";
+    return `${Math.round(seconds / 60)}分`;
+  }
+  return `${Number(entry.minutes || 1)}分`;
 }
 
 function svgIcon(name) {
@@ -443,19 +490,19 @@ function bindEvents() {
 
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton) return;
-    if (actionButton.dataset.action === "open-today" || actionButton.dataset.action === "skip-gate") {
+    if (actionButton.dataset.action === "choose-mode") {
       markIntroSeen();
       setTodayStep("choose");
     }
     if (actionButton.dataset.action === "rescue") {
       markIntroSeen();
       setMode("quick3", { rescue: true, minutes: 1 });
-      setTodayStep("prompt");
+      setTodayStep("write");
     }
     if (actionButton.dataset.action === "use-recommend") {
       markIntroSeen();
       setMode(starterStep(state.entries).modeId);
-      setTodayStep("prompt");
+      setTodayStep("write");
     }
   });
 
@@ -469,21 +516,7 @@ function bindEvents() {
       minutes: state.settings.defaultMinutes
     });
     setMode(modeId);
-    setTodayStep("prompt");
-  });
-
-  $("#prompt-prev").addEventListener("click", () => {
-    promptIndex = Math.max(0, promptIndex - 1);
-    renderPrompt();
-  });
-
-  $("#prompt-next").addEventListener("click", () => {
-    const mode = getMode(state.currentModeId);
-    if (promptIndex >= mode.prompts.length - 1) setTodayStep("timer");
-    else {
-      promptIndex += 1;
-      renderPrompt();
-    }
+    setTodayStep("write");
   });
 
   $("#copy-prompts").addEventListener("click", copyPrompts);
@@ -509,7 +542,8 @@ function bindEvents() {
     const button = event.target.closest("[data-mode-id]");
     if (!button) return;
     setMode(button.dataset.modeId);
-    setTodayStep("prompt");
+    markIntroSeen();
+    setTodayStep("write");
     setView("today");
   });
 
@@ -554,7 +588,7 @@ function boot() {
   timer.remaining = timer.duration;
   bindEvents();
   render();
-  setTodayStep("gate");
+  setTodayStep("settle");
   setView(location.hash.replace("#", "") || "today");
 
   if ("serviceWorker" in navigator) {

@@ -55,9 +55,9 @@
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "続き方を見る",
-      "short_name": "習慣",
-      "description": "続けるための記録を開く",
+      "name": "記録を見る",
+      "short_name": "記録",
+      "description": "本文を含まない実行ログを開く",
       "url": "./index.html#rhythm",
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f5f7f3">
-    <meta name="description" content="紙ノートでジャーナリングを始めるための、スマホ用の静かな補助ツール">
+    <meta name="description" content="紙ノートでジャーナリングするための、スマホ用の伴走ツール">
     <meta name="application-name" content="余白ノート">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,106 +34,139 @@
 
       <main class="app-main">
         <section class="view active" id="view-today" aria-labelledby="today-title">
-          <section class="gate today-step active" data-step="gate" aria-labelledby="gate-title">
-            <div class="gate-visual" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
+          <section class="today-step active" data-step="settle" aria-labelledby="settle-title">
+            <div class="settle-hero">
+              <div class="breath-mark" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p class="kicker" id="today-date"></p>
+              <h1 id="settle-title">紙の横に置く準備をする。</h1>
+              <p>このツールは書く場所ではありません。紙に書く間、問いと時間をそっと置いておきます。</p>
             </div>
-            <p class="kicker" id="today-date"></p>
-            <h1 id="gate-title">紙に向かう前に、頭を少し静かにする。</h1>
-            <p class="quote-label">今日の一言</p>
-            <p class="lead" id="daily-hint"></p>
-            <div class="gate-actions">
-              <button class="primary-button large" type="button" data-action="open-today">準備できた</button>
+
+            <section class="quote-card" aria-label="今日の一言">
+              <p class="kicker">今日の一言</p>
+              <blockquote id="daily-quote">読み込み中</blockquote>
+              <p id="daily-source"></p>
+            </section>
+
+            <div class="settle-actions">
+              <button class="primary-button large" type="button" data-action="choose-mode">書き方を選ぶ</button>
               <button class="secondary-button large" type="button" data-action="rescue">1行だけ</button>
             </div>
-            <button class="text-button" type="button" data-action="skip-gate">今日は眺めるだけ</button>
           </section>
 
           <section class="today-step" data-step="choose" aria-labelledby="today-title">
             <div class="screen-head">
               <p class="kicker">今日</p>
-              <h2 id="today-title">どれに近いですか</h2>
-              <p>選ぶだけです。本文はアプリに入力しません。</p>
+              <h2 id="today-title">横に置く型を選ぶ</h2>
+              <p>選んだら、そのまま紙の横で見られる画面に移ります。</p>
             </div>
 
             <button class="recommend-card" type="button" data-action="use-recommend">
-              <span class="recommend-label">おすすめ</span>
+              <span class="recommend-label">今日のおすすめ</span>
               <span class="recommend-title" id="recommended-title">3行だけ</span>
-              <span class="recommend-sub" id="recommended-sub">迷ったらここから始めます。</span>
+              <span class="recommend-sub" id="recommended-sub">迷ったらここから。</span>
             </button>
+            <button class="secondary-button large" type="button" data-action="rescue">1行だけ</button>
 
             <div class="choice-list" id="issue-list" aria-label="いまの状態"></div>
           </section>
 
-          <section class="today-step" data-step="prompt" aria-labelledby="prompt-title">
-            <div class="flow-head">
-              <button class="back-button" type="button" data-step-target="choose">戻る</button>
-              <p id="prompt-count">1 / 3</p>
+          <section class="today-step" data-step="write" aria-labelledby="write-title">
+            <div class="companion-head">
+              <button class="back-button" type="button" data-step-target="choose">型を変える</button>
             </div>
-            <article class="prompt-card">
-              <p class="kicker" id="mode-kicker">紙に写す問い</p>
-              <h2 id="prompt-title">今日あったことを1つ。</h2>
-              <p id="prompt-helper">この問いだけ紙に写します。</p>
-            </article>
-            <div class="progress-line" aria-hidden="true">
-              <span id="prompt-progress"></span>
-            </div>
-            <div class="action-row">
-              <button class="secondary-button" type="button" id="prompt-prev">前へ</button>
-              <button class="primary-button" type="button" id="prompt-next">次へ</button>
-            </div>
-            <button class="quiet-button" type="button" id="copy-prompts">問いをまとめてコピー</button>
-          </section>
 
-          <section class="today-step" data-step="timer" aria-labelledby="timer-title">
-            <div class="flow-head">
-              <button class="back-button" type="button" data-step-target="prompt">戻る</button>
-              <p id="timer-mode">3行だけ</p>
-            </div>
-            <section class="timer-stage" aria-label="書く時間">
-              <p class="kicker">紙に書く</p>
-              <h2 id="timer-title">タイマー</h2>
-              <div class="timer-circle" id="timer-circle">
+            <section class="write-board">
+              <p class="kicker" id="write-kicker">紙の横に置く</p>
+              <h2 id="write-title">3行だけ</h2>
+              <p id="write-cue">この順番で紙に書きます。</p>
+
+              <div class="timer-strip" aria-label="タイマー">
                 <div>
                   <span id="timer-face">03:00</span>
                   <small id="timer-caption">準備OK</small>
                 </div>
-              </div>
-              <div class="action-row">
                 <button class="primary-button" type="button" id="timer-toggle">開始</button>
-                <button class="secondary-button" type="button" id="timer-reset">戻す</button>
+                <button class="secondary-button" type="button" id="timer-reset" aria-label="タイマーを戻す">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3 12a9 9 0 0 1 15-6.7"></path>
+                    <path d="M18 3v5h-5"></path>
+                    <path d="M21 12a9 9 0 0 1-15 6.7"></path>
+                    <path d="M6 21v-5h5"></path>
+                  </svg>
+                </button>
               </div>
-              <button class="quiet-button" type="button" data-step-target="complete">書き終えた</button>
             </section>
+
+            <section class="paper-prompts" aria-labelledby="paper-prompts-title">
+              <div class="section-row">
+                <div>
+                  <p class="kicker">紙に書く順番</p>
+                  <h3 id="paper-prompts-title">画面を見ながら書く</h3>
+                </div>
+                <button class="quiet-button compact" type="button" id="copy-prompts">コピー</button>
+              </div>
+              <ol id="prompt-stack"></ol>
+            </section>
+
+            <section class="quote-card compact-quote" aria-label="書きながら見る今日の一言">
+              <p class="kicker">書いている間の一言</p>
+              <blockquote id="write-quote">読み込み中</blockquote>
+              <p id="write-source"></p>
+            </section>
+
+            <button class="primary-button large sticky-next" type="button" data-step-target="reflect">整理する</button>
           </section>
 
-          <section class="today-step" data-step="complete" aria-labelledby="complete-title">
-            <div class="complete-panel">
-              <p class="kicker">完了</p>
-              <h2 id="complete-title">本文は紙の中に置いたまま。</h2>
-              <p id="complete-summary">アプリには、書いた事実だけ残します。</p>
-              <button class="primary-button large" type="button" id="complete-session">書けた</button>
-              <button class="secondary-button large" type="button" data-step-target="choose">もう一度選ぶ</button>
+          <section class="today-step" data-step="reflect" aria-labelledby="reflect-title">
+            <div class="companion-head">
+              <button class="back-button" type="button" data-step-target="write">書く画面へ</button>
             </div>
+
+            <section class="reflect-hero">
+              <p class="kicker">整理</p>
+              <h2 id="reflect-title">書いた紙を、少しだけ見返す。</h2>
+              <p>本文はアプリに入れません。紙の中で、印をつけるだけで終わります。</p>
+            </section>
+
+            <section class="quote-card reflect-quote" aria-label="整理で見る今日の一言">
+              <p class="kicker">今日の一言をもう一度</p>
+              <blockquote id="reflect-quote">読み込み中</blockquote>
+              <p id="reflect-source"></p>
+            </section>
+
+            <section class="reflect-panel">
+              <p class="kicker">紙の中でやること</p>
+              <ol class="reflect-list">
+                <li>今日の一言と近い行に、短い線を引く。</li>
+                <li>残したい言葉を一つだけ丸で囲む。</li>
+                <li>最後に、明日へ渡す一行を書く。</li>
+              </ol>
+            </section>
+
+            <button class="primary-button large" type="button" id="complete-session">紙に残した</button>
+            <button class="secondary-button large" type="button" data-step-target="choose">別の型で続ける</button>
           </section>
         </section>
 
         <section class="view" id="view-methods" aria-labelledby="methods-title">
           <div class="screen-head">
             <p class="kicker">型</p>
-            <h2 id="methods-title">必要な分だけ選ぶ</h2>
-            <p>初心者が迷いにくい型だけに絞っています。</p>
+            <h2 id="methods-title">紙の横に置く型</h2>
+            <p>選ぶと、その型の伴走画面へ移動します。</p>
           </div>
           <div class="method-list" id="method-list"></div>
         </section>
 
         <section class="view" id="view-rhythm" aria-labelledby="rhythm-title">
           <div class="screen-head">
-            <p class="kicker">習慣</p>
-            <h2 id="rhythm-title">続き方を見る</h2>
-            <p>点数ではなく、戻りやすさを見る画面です。</p>
+            <p class="kicker">振り返り</p>
+            <h2 id="rhythm-title">紙に残した記録</h2>
+            <p>本文は保存しません。見返すのは日時、使った型、経過時間、今日の一言だけです。</p>
           </div>
 
           <section class="stats-grid" aria-label="習慣の統計">
@@ -152,9 +185,14 @@
           </section>
 
           <section class="soft-panel">
-            <p class="kicker">今日の状態</p>
+            <p class="kicker">戻りやすさ</p>
             <h3 id="guard-title">初回セットアップ</h3>
             <p id="guard-detail">今日は1行だけで開始できます。</p>
+          </section>
+
+          <section class="soft-panel">
+            <p class="kicker">最近の一言</p>
+            <div class="quote-history" id="quote-history"></div>
           </section>
 
           <section class="soft-panel">
@@ -166,13 +204,13 @@
 
           <section class="soft-panel">
             <p class="kicker">週末だけ見る</p>
-            <h3>今週の問い</h3>
+            <h3>紙を見返す問い</h3>
             <ol class="mini-prompts" id="weekly-prompts"></ol>
           </section>
 
           <section class="soft-panel">
-            <p class="kicker">最近</p>
-            <h3>紙の位置メモ</h3>
+            <p class="kicker">ログ</p>
+            <h3>最近の記録</h3>
             <div class="history-list" id="history-list"></div>
           </section>
         </section>
@@ -181,7 +219,7 @@
           <div class="screen-head">
             <p class="kicker">設定</p>
             <h2 id="settings-title">使いやすさ</h2>
-            <p>入力欄はここだけに集めています。</p>
+            <p>書く画面では入力させないため、設定だけここに集めます。</p>
           </div>
 
           <section class="settings-card">
@@ -234,7 +272,7 @@
               <span>本文を保存しない</span>
               <input id="setting-privacy" type="checkbox" checked>
             </label>
-            <p class="note">保存するのは、日付・型・時間・紙コードだけです。</p>
+            <p class="note">保存するのは、日付・曜日・開始時刻・経過時間・使った型・今日の一言だけです。</p>
           </section>
 
           <section class="settings-card">
@@ -274,7 +312,7 @@
             <path d="M16 20v-7"></path>
             <path d="M22 20H2"></path>
           </svg>
-          <span>習慣</span>
+          <span>記録</span>
         </button>
         <button class="tab" type="button" data-view="settings">
           <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
