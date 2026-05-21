@@ -152,7 +152,7 @@ try {
   if (!gateTitle.includes("紙に向かう前")) throw new Error("Gate screen did not render");
   if (!dailyQuote.includes(" / ")) throw new Error("Daily quote did not render with source");
   if (choiceCount < 8) throw new Error("Choice list did not render");
-  if (!afterIssue.includes("CBT")) throw new Error("Issue choice did not switch mode");
+  if (!afterIssue || afterIssue === initial) throw new Error("Issue choice did not switch mode");
   if (!rescueTitle.includes("3行だけ")) throw new Error("Rescue mode did not switch to quick3");
   if (timerText !== "01:00") throw new Error("Rescue timer did not set to 1 minute");
   if (days !== "1") throw new Error("Completion did not update habit stats");

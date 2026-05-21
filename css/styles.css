@@ -299,7 +299,7 @@ p {
 .choice-card,
 .method-card {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -310,20 +310,55 @@ p {
 }
 
 .choice-icon,
+.method-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 16px;
+}
+
+.method-card {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+}
+
 .method-time {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  min-width: 50px;
+  min-height: 34px;
+  padding: 0 10px;
   color: var(--accent);
   background: var(--accent-soft);
-  border-radius: 14px;
-  font-size: 0.9rem;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.choice-card span,
-.method-card span {
+.ui-icon,
+.tab-icon {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tab-icon {
+  width: 21px;
+  height: 21px;
+}
+
+.choice-title,
+.choice-sub,
+.method-title,
+.method-sub {
   display: block;
 }
 
@@ -728,6 +763,10 @@ button:focus-visible {
 .tab {
   position: relative;
   z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
   flex: 1 1 0;
   max-width: 174px;
   min-height: 54px;
@@ -736,6 +775,7 @@ button:focus-visible {
   border: 0;
   border-radius: 14px;
   font-size: 0.9rem;
+  line-height: 1.15;
 }
 
 .tab.active {

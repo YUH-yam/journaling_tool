@@ -32,16 +32,51 @@ const THEME_COLORS = {
   dark: "#111614"
 };
 
+const ICON_PATHS = {
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  leaf: '<path d="M5 21c8 0 14-6 14-14V3h-4C7 3 3 8 3 15c0 3 2 6 2 6Z"/><path d="M5 21c0-7 4-11 10-13"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  moon: '<path d="M20 14.5A7.5 7.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/>',
+  refresh: '<path d="M3 12a9 9 0 0 1 15-6.7"/><path d="M18 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7"/><path d="M6 21v-5h5"/>',
+  briefcase: '<path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1"/><path d="M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M4 12h16"/>',
+  cloud: '<path d="M17.5 18H8a5 5 0 1 1 1.4-9.8A6 6 0 0 1 21 11.5 3.5 3.5 0 0 1 17.5 18Z"/>',
+  flame: '<path d="M12 22c4 0 7-3 7-7 0-3-2-5-4-7 .2 2-1 3-2.5 3C11 11 10 9 11 6c-3 2-6 5-6 9 0 4 3 7 7 7Z"/>',
+  scale: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="m6 7-3 6h6Z"/><path d="m18 7-3 6h6Z"/>',
+  heart: '<path d="M20.8 5.8a5.4 5.4 0 0 0-7.6 0L12 7l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 22l8.8-8.6a5.4 5.4 0 0 0 0-7.6Z"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/>',
+  dots: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  bars: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.4.2.8.5 1.1.8"/>',
+  plus: '<path d="M12 5v14"/><path d="M5 12h14"/>'
+};
+
 const ISSUE_ICONS = {
-  start: "迷",
-  tired: "休",
-  scattered: "散",
-  work: "仕",
-  anxiety: "不",
-  anger: "怒",
-  decision: "決",
-  selfCriticism: "責",
-  positive: "整"
+  start: "compass",
+  tired: "leaf",
+  scattered: "dots",
+  work: "briefcase",
+  anxiety: "cloud",
+  anger: "flame",
+  decision: "scale",
+  selfCriticism: "heart",
+  positive: "sun"
+};
+
+const MODE_ICONS = {
+  quick3: "pen",
+  fiveMinute: "compass",
+  morning: "sun",
+  noonReset: "refresh",
+  nightClose: "moon",
+  gratitude: "leaf",
+  workFog: "briefcase",
+  cbtLight: "cloud",
+  anxiety: "cloud",
+  decision: "scale",
+  anger: "flame",
+  selfCompassion: "heart",
+  weekly: "bars"
 };
 
 const systemThemeQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -188,7 +223,7 @@ function renderChoices() {
     const mode = getMode(item.modeId);
     return `
       <button class="choice-card" type="button" data-issue="${item.id}">
-        <span class="choice-icon" aria-hidden="true">${escapeHtml(ISSUE_ICONS[item.id] || "書")}</span>
+        <span class="choice-icon" aria-hidden="true">${svgIcon(ISSUE_ICONS[item.id] || "pen")}</span>
         <span>
           <span class="choice-title">${escapeHtml(item.label)}</span>
           <span class="choice-sub">${escapeHtml(mode.title)} · ${mode.duration}分</span>
@@ -228,11 +263,12 @@ function renderTimer() {
 function renderMethods() {
   $("#method-list").innerHTML = MODES.map((mode) => `
     <button class="method-card" type="button" data-mode-id="${mode.id}">
-      <span class="method-time">${mode.duration}分</span>
+      <span class="method-icon" aria-hidden="true">${svgIcon(MODE_ICONS[mode.id] || "pen")}</span>
       <span>
         <span class="method-title">${escapeHtml(mode.title)}</span>
         <span class="method-sub">${escapeHtml(mode.bestFor)}</span>
       </span>
+      <span class="method-time">${mode.duration}分</span>
     </button>
   `).join("");
 }
@@ -379,6 +415,11 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function svgIcon(name) {
+  const path = ICON_PATHS[name] || ICON_PATHS.pen;
+  return `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${path}</svg>`;
 }
 
 let toastTimeout = null;
