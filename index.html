@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f3f5f1">
-    <meta name="description" content="紙ノートでジャーナリングを続けるためのスマホ補助ツール">
-    <meta name="application-name" content="Journal">
+    <meta name="theme-color" content="#f5f7f3">
+    <meta name="description" content="紙ノートでジャーナリングを始めるための、スマホ用の静かな補助ツール">
+    <meta name="application-name" content="余白ノート">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Journal">
+    <meta name="apple-mobile-web-app-title" content="余白ノート">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Journaling Coach</title>
+    <title>余白ノート</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
     <link rel="icon" href="assets/icon-192.png" sizes="192x192" type="image/png">
@@ -19,139 +19,123 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="app-header">
+      <header class="topbar" aria-label="アプリ情報">
         <div>
-          <p class="caption">紙ノート用</p>
-          <h1>今日のジャーナル</h1>
+          <p class="kicker">紙ノート補助</p>
+          <p class="brand">余白ノート</p>
         </div>
-        <button class="icon-button install-button hidden" type="button" title="ホーム画面に追加" aria-label="ホーム画面に追加">
+        <button class="icon-button install-button hidden" type="button" aria-label="ホーム画面に追加" title="ホーム画面に追加">
           <span aria-hidden="true">＋</span>
         </button>
       </header>
 
-      <main class="content">
+      <main class="app-main">
         <section class="view active" id="view-today" aria-labelledby="today-title">
-          <div class="screen-title">
-            <p class="caption" id="today-date"></p>
-            <h2 id="today-title">今日書くこと</h2>
-            <p class="screen-lead">まず整えて、ひとつずつ進みます。</p>
-          </div>
+          <section class="gate today-step active" data-step="gate" aria-labelledby="gate-title">
+            <div class="gate-visual" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <p class="kicker" id="today-date"></p>
+            <h1 id="gate-title">紙に向かう前に、頭を少し静かにする。</h1>
+            <p class="quote-label">今日の一言</p>
+            <p class="lead" id="daily-hint"></p>
+            <div class="gate-actions">
+              <button class="primary-button large" type="button" data-action="open-today">準備できた</button>
+              <button class="secondary-button large" type="button" data-action="rescue">1行だけ</button>
+            </div>
+            <button class="text-button" type="button" data-action="skip-gate">今日は眺めるだけ</button>
+          </section>
 
-          <section class="panel prelude-panel today-step active" data-step="settle" aria-labelledby="settle-title">
-            <p class="caption">準備</p>
-            <h3 id="settle-title">頭を少し整える</h3>
-            <section class="daily-hint" aria-label="今日のヒント">
-              <p class="caption">今日のヒント</p>
-              <p id="daily-hint"></p>
+          <section class="today-step" data-step="choose" aria-labelledby="today-title">
+            <div class="screen-head">
+              <p class="kicker">今日</p>
+              <h2 id="today-title">どれに近いですか</h2>
+              <p>選ぶだけです。本文はアプリに入力しません。</p>
+            </div>
+
+            <button class="recommend-card" type="button" data-action="use-recommend">
+              <span class="recommend-label">おすすめ</span>
+              <span class="recommend-title" id="recommended-title">3行だけ</span>
+              <span class="recommend-sub" id="recommended-sub">迷ったらここから始めます。</span>
+            </button>
+
+            <div class="choice-list" id="issue-list" aria-label="いまの状態"></div>
+          </section>
+
+          <section class="today-step" data-step="prompt" aria-labelledby="prompt-title">
+            <div class="flow-head">
+              <button class="back-button" type="button" data-step-target="choose">戻る</button>
+              <p id="prompt-count">1 / 3</p>
+            </div>
+            <article class="prompt-card">
+              <p class="kicker" id="mode-kicker">紙に写す問い</p>
+              <h2 id="prompt-title">今日あったことを1つ。</h2>
+              <p id="prompt-helper">この問いだけ紙に写します。</p>
+            </article>
+            <div class="progress-line" aria-hidden="true">
+              <span id="prompt-progress"></span>
+            </div>
+            <div class="action-row">
+              <button class="secondary-button" type="button" id="prompt-prev">前へ</button>
+              <button class="primary-button" type="button" id="prompt-next">次へ</button>
+            </div>
+            <button class="quiet-button" type="button" id="copy-prompts">問いをまとめてコピー</button>
+          </section>
+
+          <section class="today-step" data-step="timer" aria-labelledby="timer-title">
+            <div class="flow-head">
+              <button class="back-button" type="button" data-step-target="prompt">戻る</button>
+              <p id="timer-mode">3行だけ</p>
+            </div>
+            <section class="timer-stage" aria-label="書く時間">
+              <p class="kicker">紙に書く</p>
+              <h2 id="timer-title">タイマー</h2>
+              <div class="timer-circle" id="timer-circle">
+                <div>
+                  <span id="timer-face">03:00</span>
+                  <small id="timer-caption">準備OK</small>
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="primary-button" type="button" id="timer-toggle">開始</button>
+                <button class="secondary-button" type="button" id="timer-reset">戻す</button>
+              </div>
+              <button class="quiet-button" type="button" data-step-target="complete">書き終えた</button>
             </section>
-            <div class="mind-guide">
-              <p class="caption">30秒だけ</p>
-              <ol>
-                <li>息を長く吐く。</li>
-                <li>気になることを1つだけ紙に置く。</li>
-                <li>今は選ぶだけ、と決める。</li>
-              </ol>
-            </div>
-            <p class="helper-text" id="guard-detail"></p>
-            <button class="primary-button full" type="button" data-today-step="choose">今日を書く</button>
           </section>
 
-          <div class="flow-tabs hidden" role="tablist" aria-label="今日の流れ">
-            <button class="flow-tab active" type="button" data-today-step="choose">選ぶ</button>
-            <button class="flow-tab" type="button" data-today-step="copy">写す</button>
-            <button class="flow-tab" type="button" data-today-step="write">書く</button>
-            <button class="flow-tab" type="button" data-today-step="done">完了</button>
-          </div>
-
-          <section class="panel picker-panel today-step" data-step="choose" aria-labelledby="selector-title">
-            <div class="panel-head">
-              <div>
-                <p class="caption">1. 型を選ぶ</p>
-                <h3 id="selector-title">今日に近いものを押す</h3>
-              </div>
-              <button class="rescue-button" type="button">1分だけ</button>
+          <section class="today-step" data-step="complete" aria-labelledby="complete-title">
+            <div class="complete-panel">
+              <p class="kicker">完了</p>
+              <h2 id="complete-title">本文は紙の中に置いたまま。</h2>
+              <p id="complete-summary">アプリには、書いた事実だけ残します。</p>
+              <button class="primary-button large" type="button" id="complete-session">書けた</button>
+              <button class="secondary-button large" type="button" data-step-target="choose">もう一度選ぶ</button>
             </div>
-            <div class="chip-row" id="issue-chips" role="listbox" aria-label="いまの状態"></div>
-            <p class="helper-text">ここは選ぶだけ。迷ったら何も変えずに進みます。</p>
-            <button class="primary-button full" type="button" data-today-step="copy">紙に写す</button>
-          </section>
-
-          <section class="prompt-panel today-step" data-step="copy" aria-live="polite">
-            <div class="panel-head">
-              <div>
-                <p class="caption">2. 紙に写す</p>
-                <h3 id="mode-title"></h3>
-                <p class="panel-subtext" id="mode-cue"></p>
-              </div>
-              <div class="compact-actions">
-                <button class="icon-button" type="button" id="copy-prompt" title="問いをコピー" aria-label="問いをコピー">⧉</button>
-                <button class="icon-button" type="button" id="shuffle-mode" title="別の型を提案" aria-label="別の型を提案">↻</button>
-              </div>
-            </div>
-            <p class="helper-text" id="mode-fit"></p>
-            <ol class="prompt-list" id="prompt-list"></ol>
-            <div class="paper-code">
-              <span>紙に書くコード</span>
-              <strong id="page-code"></strong>
-            </div>
-            <p class="helper-text" id="close-note"></p>
-            <div class="step-actions">
-              <button class="secondary-button" type="button" data-today-step="choose">戻る</button>
-              <button class="primary-button" type="button" data-today-step="write">タイマーへ</button>
-            </div>
-          </section>
-
-          <section class="timer-panel today-step" data-step="write" aria-labelledby="timer-title">
-            <div class="timer-head">
-              <p class="caption">3. 書く</p>
-              <h3 id="timer-title">タイマー</h3>
-              <p class="helper-text">紙に書き始めたら開始します。</p>
-            </div>
-            <div class="timer-face" id="timer-face" aria-live="polite">03:00</div>
-            <div class="timer-bar" aria-hidden="true">
-              <span id="timer-progress"></span>
-            </div>
-            <div class="timer-actions">
-              <button class="primary-button" type="button" id="timer-toggle">開始</button>
-              <button class="secondary-button" type="button" id="timer-reset">リセット</button>
-            </div>
-            <div class="step-actions">
-              <button class="secondary-button" type="button" data-today-step="copy">戻る</button>
-              <button class="primary-button" type="button" data-today-step="done">終わった</button>
-            </div>
-          </section>
-
-          <section class="panel log-panel today-step" data-step="done" aria-labelledby="log-title">
-            <div class="panel-head">
-              <div>
-                <p class="caption">4. 記録</p>
-                <h3 id="log-title">終わったら押すだけ</h3>
-              </div>
-              <span class="pill pill-safe">本文なし</span>
-            </div>
-            <p class="helper-text">アプリには、書いた事実だけを残します。本文も感想も入力しません。</p>
-            <button class="secondary-button full" type="button" data-today-step="write">タイマーに戻る</button>
-            <button class="primary-button full" type="button" id="complete-session">書けた</button>
           </section>
         </section>
 
-        <section class="view" id="view-templates" aria-labelledby="templates-title">
-          <div class="screen-title">
-            <p class="caption">紙に写す型</p>
-            <h2 id="templates-title">型を選ぶ</h2>
+        <section class="view" id="view-methods" aria-labelledby="methods-title">
+          <div class="screen-head">
+            <p class="kicker">型</p>
+            <h2 id="methods-title">必要な分だけ選ぶ</h2>
+            <p>初心者が迷いにくい型だけに絞っています。</p>
           </div>
-          <div class="chip-row" id="group-filters" aria-label="テンプレート分類"></div>
-          <div class="template-list" id="template-list"></div>
+          <div class="method-list" id="method-list"></div>
         </section>
 
-        <section class="view" id="view-habit" aria-labelledby="habit-title">
-          <div class="screen-title">
-            <p class="caption">続けるための記録</p>
-            <h2 id="habit-title">習慣を見る</h2>
+        <section class="view" id="view-rhythm" aria-labelledby="rhythm-title">
+          <div class="screen-head">
+            <p class="kicker">習慣</p>
+            <h2 id="rhythm-title">続き方を見る</h2>
+            <p>点数ではなく、戻りやすさを見る画面です。</p>
           </div>
-          <section class="metric-row" aria-label="習慣の統計">
+
+          <section class="stats-grid" aria-label="習慣の統計">
             <div>
-              <span>記録日数</span>
+              <span>書いた日</span>
               <strong id="stat-days">0</strong>
             </div>
             <div>
@@ -159,106 +143,47 @@
               <strong id="stat-last7">0</strong>
             </div>
             <div>
-              <span>救済回数</span>
+              <span>1分救済</span>
               <strong id="stat-rescue">0</strong>
             </div>
           </section>
 
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">毎日の合図</p>
-                <h3>いつ書くか</h3>
-              </div>
-            </div>
-            <label class="text-field">
-              <span>このタイミングで</span>
-              <input id="setting-trigger" type="text">
-            </label>
-            <label class="text-field">
-              <span>この行動をする</span>
-              <input id="setting-action" type="text">
-            </label>
-            <div class="ifthen-card" id="ifthen-plan"></div>
+          <section class="soft-panel">
+            <p class="kicker">今日の状態</p>
+            <h3 id="guard-title">初回セットアップ</h3>
+            <p id="guard-detail">今日は1行だけで開始できます。</p>
           </section>
 
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">続ける順番</p>
-                <h3>14日プログラム</h3>
-              </div>
-            </div>
-            <div class="progress-track" id="starter-track"></div>
+          <section class="soft-panel">
+            <p class="kicker">14日だけ</p>
+            <h3 id="starter-title">1日目</h3>
+            <p id="starter-goal">ノートを開く動作を作ります。</p>
+            <div class="day-track" id="starter-track"></div>
           </section>
 
-          <section class="panel weekly-summary">
-            <div class="panel-head">
-              <div>
-                <p class="caption">週1回だけ</p>
-                <h3>週一だけ見返す</h3>
-              </div>
-              <button class="quiet-button" type="button" data-mode-shortcut="weekly">書く</button>
-            </div>
-            <div class="review-grid">
-              <div>
-                <span>多かった型</span>
-                <strong id="top-mode">なし</strong>
-              </div>
-              <div>
-                <span>今週の回数</span>
-                <strong id="mood-delta">0</strong>
-              </div>
-            </div>
-            <ol class="prompt-list compact-list" id="weekly-prompts"></ol>
+          <section class="soft-panel">
+            <p class="kicker">週末だけ見る</p>
+            <h3>今週の問い</h3>
+            <ol class="mini-prompts" id="weekly-prompts"></ol>
           </section>
 
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">無理しないために</p>
-                <h3>安全チェック</h3>
-              </div>
-            </div>
-            <ul class="safety-list">
-              <li>毎回つらい記憶を深掘りしない。</li>
-              <li>夜は重い自由記述より、店じまい型を使う。</li>
-              <li>他人の氏名や職場情報は紙にもそのまま残しすぎない。</li>
-              <li>書いた後に気分が数時間戻らない時は、量を減らすか相談を優先する。</li>
-            </ul>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">過去のメモ位置</p>
-                <h3>最近の記録</h3>
-              </div>
-            </div>
+          <section class="soft-panel">
+            <p class="kicker">最近</p>
+            <h3>紙の位置メモ</h3>
             <div class="history-list" id="history-list"></div>
           </section>
         </section>
 
         <section class="view" id="view-settings" aria-labelledby="settings-title">
-          <div class="screen-title">
-            <p class="caption">使いやすさ</p>
-            <h2 id="settings-title">設定</h2>
+          <div class="screen-head">
+            <p class="kicker">設定</p>
+            <h2 id="settings-title">使いやすさ</h2>
+            <p>入力欄はここだけに集めています。</p>
           </div>
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">基本</p>
-                <h3>いつもの設定</h3>
-              </div>
-            </div>
-            <label class="text-field">
-              <span>ノート名</span>
-              <small>例: 黒い手帳</small>
-              <input id="setting-notebook" type="text">
-            </label>
-            <label class="text-field">
+
+          <section class="settings-card">
+            <label class="field">
               <span>いつもの時間</span>
-              <small>今日画面を開いた時の初期値</small>
               <select id="setting-minutes">
                 <option value="1">1分</option>
                 <option value="3">3分</option>
@@ -267,9 +192,9 @@
                 <option value="10">10分</option>
               </select>
             </label>
+
             <fieldset class="theme-field">
               <legend>画面の明るさ</legend>
-              <small>読みやすい表示を選べます。</small>
               <div class="segmented-control" role="radiogroup" aria-label="画面の明るさ">
                 <label>
                   <input type="radio" name="setting-theme" value="light">
@@ -285,44 +210,53 @@
                 </label>
               </div>
             </fieldset>
+          </section>
+
+          <section class="settings-card">
+            <p class="kicker">毎日の合図</p>
+            <label class="field">
+              <span>この後に</span>
+              <input id="setting-trigger" type="text" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>これをする</span>
+              <input id="setting-action" type="text" autocomplete="off">
+            </label>
+            <p class="ifthen-card" id="ifthen-plan"></p>
+          </section>
+
+          <section class="settings-card">
+            <p class="kicker">プライバシー</p>
             <label class="toggle-row">
-              <span>
-                <span class="toggle-title">本文を保存しない</span>
-                <small>保存するのは型、時間、日付、紙コードだけです。</small>
-              </span>
+              <span>本文を保存しない</span>
               <input id="setting-privacy" type="checkbox" checked>
             </label>
+            <p class="note">保存するのは、日付・型・時間・紙コードだけです。</p>
           </section>
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="caption">端末内のデータ</p>
-                <h3>記録の出し入れ</h3>
-              </div>
-            </div>
-            <p class="helper-text">本文は含まれません。この端末の実行ログだけを扱います。</p>
+
+          <section class="settings-card">
+            <p class="kicker">端末内の記録</p>
             <div class="button-stack">
-              <button class="secondary-button" type="button" id="export-data">記録をエクスポート</button>
+              <button class="secondary-button" type="button" id="export-data">書き出す</button>
               <label class="secondary-button file-button">
-                記録をインポート
+                読み込む
                 <input id="import-data" type="file" accept="application/json">
               </label>
-              <button class="danger-button" type="button" id="clear-data">ローカル記録を削除</button>
+              <button class="danger-button" type="button" id="clear-data">削除する</button>
             </div>
           </section>
         </section>
       </main>
 
-      <nav class="bottom-nav" aria-label="主要ナビゲーション">
-        <button class="nav-item active" type="button" data-view="today" aria-current="page"><span>今日</span></button>
-        <button class="nav-item" type="button" data-view="templates"><span>型</span></button>
-        <button class="nav-item" type="button" data-view="habit"><span>習慣</span></button>
-        <button class="nav-item" type="button" data-view="settings"><span>設定</span></button>
+      <nav class="tabbar" aria-label="主要ナビゲーション">
+        <button class="tab active" type="button" data-view="today" aria-current="page">今日</button>
+        <button class="tab" type="button" data-view="methods">型</button>
+        <button class="tab" type="button" data-view="rhythm">習慣</button>
+        <button class="tab" type="button" data-view="settings">設定</button>
       </nav>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
     <script type="module" src="js/app.js"></script>
   </body>
 </html>

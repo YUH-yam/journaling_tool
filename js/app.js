@@ -1,6 +1,5 @@
 import {
   APP_VERSION,
-  GROUP_LABELS,
   ISSUE_OPTIONS,
   MODES,
   buildIfThenPlan,
@@ -16,9 +15,9 @@ import {
   summarizeWeek,
   uniqueDates
 } from "./core.js";
+import { QUOTE_POOL, quoteForDate } from "./quotes.js";
 
 const STORAGE_KEY = "journaling-coach-state";
-
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -29,26 +28,29 @@ const todayFormatter = new Intl.DateTimeFormat("ja-JP", {
 });
 
 const THEME_COLORS = {
-  light: "#f3f5f1",
-  dark: "#101412"
+  light: "#f5f7f3",
+  dark: "#111614"
 };
 
-const DAILY_HINTS = [
-  "全部を書くより、ひとつ置く。",
-  "まとまらない日は、まとまらないまま始める。",
-  "紙は判断する場所ではなく、置く場所。",
-  "今日は解決ではなく、見える化だけでいい。",
-  "一行書けたら、流れは戻ってくる。",
-  "考えは頭の中より、紙の上のほうが軽い。",
-  "大きな答えより、小さな現在地を書く。"
-];
+const ISSUE_ICONS = {
+  start: "迷",
+  tired: "休",
+  scattered: "散",
+  work: "仕",
+  anxiety: "不",
+  anger: "怒",
+  decision: "決",
+  selfCriticism: "責",
+  positive: "整"
+};
 
 const systemThemeQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
 
 let state = loadState();
 let selectedIssue = "start";
-let selectedGroup = "all";
-let currentTodayStep = "settle";
+let currentStep = "gate";
+let introGate = sessionStorage.getItem("journaling-intro-seen") !== "1";
+let promptIndex = 0;
 let isRescue = false;
 let installPrompt = null;
 let timer = {
@@ -82,54 +84,57 @@ function applyTheme(theme = "system") {
   const safeTheme = ["light", "dark", "system"].includes(theme) ? theme : "system";
   document.documentElement.dataset.theme = safeTheme;
   const themeMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeMeta) {
-    themeMeta.setAttribute("content", THEME_COLORS[resolvedTheme(safeTheme)]);
-  }
+  if (themeMeta) themeMeta.setAttribute("content", THEME_COLORS[resolvedTheme(safeTheme)]);
+}
+
+function normalizeView(viewName) {
+  if (viewName === "templates") return "methods";
+  if (viewName === "habit" || viewName === "review") return "rhythm";
+  return ["today", "methods", "rhythm", "settings"].includes(viewName) ? viewName : "today";
 }
 
 function setView(viewName) {
-  if (viewName === "review") viewName = "habit";
-  if (!$(`#view-${viewName}`)) viewName = "today";
-  $$(".view").forEach((view) => view.classList.toggle("active", view.id === `view-${viewName}`));
-  $$(".nav-item").forEach((item) => {
-    const isActive = item.dataset.view === viewName;
-    item.classList.toggle("active", isActive);
-    if (isActive) {
-      item.setAttribute("aria-current", "page");
-    } else {
-      item.removeAttribute("aria-current");
-    }
+  const safeView = normalizeView(viewName);
+  document.body.dataset.view = safeView;
+  $$(".view").forEach((view) => view.classList.toggle("active", view.id === `view-${safeView}`));
+  $$(".tab").forEach((tab) => {
+    const isActive = tab.dataset.view === safeView;
+    tab.classList.toggle("active", isActive);
+    if (isActive) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
   });
-  if (location.hash !== `#${viewName}`) {
-    history.replaceState(null, "", `#${viewName}`);
-  }
+  if (location.hash !== `#${safeView}`) history.replaceState(null, "", `#${safeView}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function setTodayStep(step) {
-  const safeStep = ["settle", "choose", "copy", "write", "done"].includes(step) ? step : "settle";
-  currentTodayStep = safeStep;
+  const safeStep = ["gate", "choose", "prompt", "timer", "complete"].includes(step) ? step : "gate";
+  currentStep = safeStep;
+  document.body.dataset.step = safeStep;
+  document.body.dataset.introGate = String(introGate);
   $$(".today-step").forEach((section) => {
     section.classList.toggle("active", section.dataset.step === safeStep);
   });
-  $(".flow-tabs")?.classList.toggle("hidden", safeStep === "settle");
-  $$(".flow-tab").forEach((button) => {
-    const isActive = button.dataset.todayStep === safeStep;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
+  if (safeStep === "prompt") promptIndex = Math.min(promptIndex, getMode(state.currentModeId).prompts.length - 1);
+  renderPrompt();
 }
 
 function setMode(modeId, options = {}) {
-  state.currentModeId = modeId;
-  isRescue = Boolean(options.rescue);
   const mode = getMode(modeId);
-  const minutes = options.minutes || Math.min(Number(state.settings.defaultMinutes || mode.duration), mode.duration);
-  timer.duration = minutes * 60;
+  state.currentModeId = mode.id;
+  isRescue = Boolean(options.rescue);
+  const minutes = Number(options.minutes || Math.min(state.settings.defaultMinutes || mode.duration, mode.duration));
+  timer.duration = Math.max(1, minutes) * 60;
   timer.remaining = timer.duration;
+  promptIndex = 0;
   stopTimer();
   saveState();
   render();
+}
+
+function markIntroSeen() {
+  introGate = false;
+  sessionStorage.setItem("journaling-intro-seen", "1");
 }
 
 function stopTimer() {
@@ -141,23 +146,12 @@ function stopTimer() {
 }
 
 function tickTimer() {
-  if (timer.remaining > 0) {
-    timer.remaining -= 1;
-  }
+  if (timer.remaining > 0) timer.remaining -= 1;
   if (timer.remaining <= 0) {
     stopTimer();
-    showToast("時間です。最後に一文だけ着地を書いて閉じます。");
+    showToast("時間です。最後の一文で閉じます。");
   }
   renderTimer();
-}
-
-function renderTimer() {
-  const minutes = Math.floor(timer.remaining / 60);
-  const seconds = timer.remaining % 60;
-  $("#timer-face").textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  const progress = timer.duration ? 100 - Math.round((timer.remaining / timer.duration) * 100) : 0;
-  $("#timer-progress").style.width = `${Math.max(0, Math.min(100, progress))}%`;
-  $("#timer-toggle").textContent = timer.running ? "一時停止" : "開始";
 }
 
 function currentPageCode() {
@@ -165,152 +159,148 @@ function currentPageCode() {
   return makePageCode(today, entriesForDate(state.entries, today).length + 1);
 }
 
-function dailyHint(dateIso = isoDate()) {
-  const date = new Date(`${dateIso}T00:00:00`);
-  const start = new Date(date.getFullYear(), 0, 0);
-  const dayNumber = Math.floor((date - start) / 86400000);
-  return DAILY_HINTS[dayNumber % DAILY_HINTS.length];
+function dailyQuoteText(quote) {
+  return `「${quote.text}」 ${quote.author} / ${quote.source}`;
 }
 
 function render() {
   const today = isoDate();
   const stats = calculateStats(state.entries, today);
   const step = starterStep(state.entries);
-  const mode = getMode(state.currentModeId);
-  const week = summarizeWeek(state.entries, today);
+  const recommended = getMode(step.modeId);
+  const quote = quoteForDate(today);
 
   $("#today-date").textContent = todayFormatter.format(new Date());
-  $("#guard-detail").textContent = `${stats.guard.title}: ${stats.guard.detail}`;
-  $("#daily-hint").textContent = dailyHint(today);
-  if ($("#starter-title")) $("#starter-title").textContent = `${step.dayNumber}日目: ${step.title.replace(/^[^:]+: /, "")}`;
-  if ($("#starter-goal")) $("#starter-goal").textContent = step.goal;
+  $("#daily-hint").textContent = dailyQuoteText(quote);
+  $("#recommended-title").textContent = recommended.title;
+  $("#recommended-sub").textContent = `${step.dayNumber}日目。${step.goal}`;
 
-  renderIssueChips();
-  renderGroupFilters();
-  renderPrompt(mode);
+  renderChoices();
+  renderPrompt();
   renderTimer();
-  renderTemplates();
-  renderHabit(stats, step);
-  renderReview(week);
+  renderMethods();
+  renderRhythm(stats, step);
   renderSettings();
-  setTodayStep(currentTodayStep);
 }
 
-function renderIssueChips() {
-  const container = $("#issue-chips");
-  container.innerHTML = ISSUE_OPTIONS.map((item) => (
-    `<button class="chip ${item.id === selectedIssue ? "active" : ""}" type="button" data-issue="${item.id}" aria-pressed="${item.id === selectedIssue}">${item.label}</button>`
-  )).join("");
+function renderChoices() {
+  $("#issue-list").innerHTML = ISSUE_OPTIONS.map((item) => {
+    const mode = getMode(item.modeId);
+    return `
+      <button class="choice-card" type="button" data-issue="${item.id}">
+        <span class="choice-icon" aria-hidden="true">${escapeHtml(ISSUE_ICONS[item.id] || "書")}</span>
+        <span>
+          <span class="choice-title">${escapeHtml(item.label)}</span>
+          <span class="choice-sub">${escapeHtml(mode.title)} · ${mode.duration}分</span>
+        </span>
+      </button>
+    `;
+  }).join("");
 }
 
-function renderGroupFilters() {
-  const container = $("#group-filters");
-  container.innerHTML = Object.entries(GROUP_LABELS).map(([id, label]) => (
-    `<button class="chip ${id === selectedGroup ? "active" : ""}" type="button" data-group="${id}" aria-pressed="${id === selectedGroup}">${label}</button>`
-  )).join("");
+function renderPrompt() {
+  const mode = getMode(state.currentModeId);
+  const prompts = mode.prompts.length ? mode.prompts : ["今、紙に置きたいことを一つ。"];
+  promptIndex = Math.max(0, Math.min(promptIndex, prompts.length - 1));
+  $("#mode-kicker").textContent = `${mode.title} · ${Math.round(timer.duration / 60)}分`;
+  $("#prompt-title").textContent = prompts[promptIndex];
+  $("#prompt-helper").textContent = promptIndex === prompts.length - 1
+    ? `最後に: ${mode.close}`
+    : "この問いだけ紙に写します。";
+  $("#prompt-count").textContent = `${promptIndex + 1} / ${prompts.length}`;
+  $("#prompt-progress").style.width = `${Math.round(((promptIndex + 1) / prompts.length) * 100)}%`;
+  $("#prompt-prev").disabled = promptIndex === 0;
+  $("#prompt-next").textContent = promptIndex === prompts.length - 1 ? "タイマーへ" : "次へ";
+  $("#timer-mode").textContent = mode.title;
+  $("#complete-summary").textContent = `${mode.title} · ${Math.round(timer.duration / 60)}分 · ${currentPageCode()}`;
 }
 
-function renderPrompt(mode) {
-  $("#mode-title").textContent = mode.title;
-  $("#mode-cue").textContent = mode.cue;
-  $("#mode-fit").textContent = `${mode.bestFor}。この順番で紙に書きます。目安 ${Math.round(timer.duration / 60)}分。`;
-  $("#prompt-list").innerHTML = mode.prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
-  $("#page-code").textContent = currentPageCode();
-  $("#close-note").textContent = `最後に: ${mode.close}`;
+function renderTimer() {
+  const minutes = Math.floor(timer.remaining / 60);
+  const seconds = timer.remaining % 60;
+  $("#timer-face").textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  const progress = timer.duration ? Math.round((1 - timer.remaining / timer.duration) * 100) : 0;
+  $("#timer-circle").style.setProperty("--timer-progress", `${Math.max(0, Math.min(100, progress))}%`);
+  $("#timer-toggle").textContent = timer.running ? "一時停止" : "開始";
+  $("#timer-caption").textContent = timer.running ? "書いています" : "準備OK";
 }
 
-function renderTemplates() {
-  const modes = selectedGroup === "all" ? MODES : MODES.filter((mode) => mode.group === selectedGroup);
-  $("#template-list").innerHTML = modes.map((mode) => `
-    <article class="template-card">
-      <header>
-        <strong>${escapeHtml(mode.title)}</strong>
-        <span class="mode-tag">${escapeHtml(GROUP_LABELS[mode.group] || mode.group)}</span>
-      </header>
-      <p>${escapeHtml(mode.bestFor)}</p>
-      <p>${escapeHtml(mode.cue)}</p>
-      <button class="small-button" type="button" data-mode-id="${mode.id}">この型にする</button>
-    </article>
+function renderMethods() {
+  $("#method-list").innerHTML = MODES.map((mode) => `
+    <button class="method-card" type="button" data-mode-id="${mode.id}">
+      <span class="method-time">${mode.duration}分</span>
+      <span>
+        <span class="method-title">${escapeHtml(mode.title)}</span>
+        <span class="method-sub">${escapeHtml(mode.bestFor)}</span>
+      </span>
+    </button>
   `).join("");
 }
 
-function renderHabit(stats, step) {
+function renderRhythm(stats, step) {
   $("#stat-days").textContent = stats.uniqueDays;
   $("#stat-last7").textContent = stats.last7Days;
   $("#stat-rescue").textContent = stats.rescueCount;
-  $("#ifthen-plan").textContent = buildIfThenPlan(state.settings.trigger, state.settings.action);
+  $("#guard-title").textContent = stats.guard.title;
+  $("#guard-detail").textContent = stats.guard.detail;
+  $("#starter-title").textContent = `${step.dayNumber}日目: ${step.title.replace(/^[^:]+: /, "")}`;
+  $("#starter-goal").textContent = step.goal;
 
   const doneDays = Math.min(uniqueDates(state.entries).length, 14);
   $("#starter-track").innerHTML = Array.from({ length: 14 }, (_, index) => {
     const day = index + 1;
     const className = day <= doneDays ? "done" : day === step.dayNumber ? "current" : "";
-    return `<span class="progress-dot ${className}" aria-label="${day}日目">${day}</span>`;
+    return `<span class="day-dot ${className}" aria-label="${day}日目">${day}</span>`;
   }).join("");
 
-  const recent = [...state.entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8);
+  const week = summarizeWeek(state.entries, isoDate());
+  const weekly = getMode("weekly").prompts;
+  $("#weekly-prompts").innerHTML = weekly.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
+
+  const recent = [...state.entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
   $("#history-list").innerHTML = recent.length
     ? recent.map((entry) => {
       const mode = getMode(entry.modeId);
       return `
         <article class="history-item">
-          <header>
-            <strong>${escapeHtml(entry.date)} ${escapeHtml(mode.shortTitle)}</strong>
-            <span class="mode-tag">${escapeHtml(entry.pageCode || "")}</span>
-          </header>
-          <p>${entry.minutes}分${entry.rescue ? " / 1分だけ" : ""}</p>
-          ${entry.note ? `<p>${escapeHtml(entry.note)}</p>` : ""}
+          <h4>${escapeHtml(entry.date)} ${escapeHtml(mode.shortTitle)}</h4>
+          <p>${entry.minutes}分 · ${escapeHtml(entry.pageCode || "")}${entry.rescue ? " · 1分救済" : ""}</p>
         </article>
       `;
     }).join("")
-    : `<p class="empty-state">まだ記録はありません。今日画面の1番上から始めます。</p>`;
-}
+    : `<p class="empty-state">まだ記録はありません。今日の画面から始めます。</p>`;
 
-function renderReview(week) {
-  $("#top-mode").textContent = week.topMode ? week.topMode.title : "なし";
-  $("#mood-delta").textContent = week.recent.length;
-  $("#weekly-prompts").innerHTML = getMode("weekly").prompts.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join("");
-}
-
-function renderSettings() {
-  $("#setting-notebook").value = state.settings.notebookName;
-  $("#setting-trigger").value = state.settings.trigger;
-  $("#setting-action").value = state.settings.action;
-  $("#setting-minutes").value = String(state.settings.defaultMinutes);
-  $$('input[name="setting-theme"]').forEach((input) => {
-    input.checked = input.value === state.settings.theme;
-  });
-  $("#setting-privacy").checked = state.settings.privacyMode;
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-async function copyPrompt() {
-  const mode = getMode(state.currentModeId);
-  const text = [
-    `${mode.title} ${currentPageCode()}`,
-    ...mode.prompts,
-    `終わりの一言: ${mode.close}`
-  ].join("\n");
-
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast("コピーしました。紙にそのまま写せます。");
-  } catch {
-    showToast(text);
+  if (week.topMode) {
+    $("#guard-detail").textContent = `${stats.guard.detail} 今週多い型は「${week.topMode.title}」です。`;
   }
 }
 
+function renderSettings() {
+  $("#setting-trigger").value = state.settings.trigger;
+  $("#setting-action").value = state.settings.action;
+  $("#setting-minutes").value = String(state.settings.defaultMinutes);
+  $("#setting-privacy").checked = state.settings.privacyMode;
+  $("#ifthen-plan").textContent = buildIfThenPlan(state.settings.trigger, state.settings.action);
+  $$('input[name="setting-theme"]').forEach((input) => {
+    input.checked = input.value === state.settings.theme;
+  });
+}
+
+function updateSettingsFromInputs({ rerender = true } = {}) {
+  state.settings.trigger = $("#setting-trigger").value.trim() || "夜の歯磨きが終わったら";
+  state.settings.action = $("#setting-action").value.trim() || "ノートを開いて3行だけ書く";
+  state.settings.defaultMinutes = Number($("#setting-minutes").value || 3);
+  state.settings.theme = $('input[name="setting-theme"]:checked')?.value || "system";
+  state.settings.privacyMode = $("#setting-privacy").checked;
+  applyTheme(state.settings.theme);
+  saveState();
+  if (rerender) render();
+  else $("#ifthen-plan").textContent = buildIfThenPlan(state.settings.trigger, state.settings.action);
+}
+
 function completeSession() {
-  const today = isoDate();
   const entry = createEntry({
-    date: today,
+    date: isoDate(),
     modeId: state.currentModeId,
     minutes: Math.max(1, Math.round(timer.duration / 60)),
     moodBefore: 50,
@@ -321,25 +311,27 @@ function completeSession() {
   });
   state.entries.push(entry);
   isRescue = false;
+  markIntroSeen();
   saveState();
   render();
-  setTodayStep("settle");
-  showToast("記録しました。紙の本文は保存していません。");
+  setTodayStep("gate");
+  showToast("記録しました。本文は保存していません。");
 }
 
-function updateSettingsFromInputs({ rerender = true } = {}) {
-  state.settings.notebookName = $("#setting-notebook").value.trim() || "紙のノート";
-  state.settings.trigger = $("#setting-trigger").value.trim() || "夜の歯磨きが終わったら";
-  state.settings.action = $("#setting-action").value.trim() || "ノートを開いて3行だけ書く";
-  state.settings.defaultMinutes = Number($("#setting-minutes").value || 3);
-  state.settings.theme = $('input[name="setting-theme"]:checked')?.value || "system";
-  state.settings.privacyMode = $("#setting-privacy").checked;
-  applyTheme(state.settings.theme);
-  saveState();
-  if (rerender) {
-    render();
-  } else {
-    $("#ifthen-plan").textContent = buildIfThenPlan(state.settings.trigger, state.settings.action);
+async function copyPrompts() {
+  const mode = getMode(state.currentModeId);
+  const quote = quoteForDate(isoDate());
+  const text = [
+    `${mode.title} ${currentPageCode()}`,
+    `今日の一言: ${quote.text} (${quote.author} / ${quote.source})`,
+    ...mode.prompts,
+    `最後: ${mode.close}`
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("紙に写す問いをコピーしました。");
+  } catch {
+    showToast("コピーできませんでした。画面の問いを紙に写してください。");
   }
 }
 
@@ -362,7 +354,7 @@ function importData(event) {
       state = sanitizeState(JSON.parse(String(reader.result)));
       saveState();
       render();
-      showToast("記録をインポートしました。");
+      showToast("読み込みました。");
     } catch {
       showToast("読み込めないJSONです。");
     }
@@ -376,7 +368,17 @@ function clearData() {
   state = sanitizeState({});
   saveState();
   setMode("quick3", { minutes: 3 });
+  setTodayStep("gate");
   showToast("ローカル記録を削除しました。");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 let toastTimeout = null;
@@ -389,17 +391,34 @@ function showToast(message) {
 }
 
 function bindEvents() {
-  $("#view-today").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-today-step]");
-    if (button) setTodayStep(button.dataset.todayStep);
-  });
-
-  $(".bottom-nav").addEventListener("click", (event) => {
+  $(".tabbar").addEventListener("click", (event) => {
     const button = event.target.closest("[data-view]");
     if (button) setView(button.dataset.view);
   });
 
-  $("#issue-chips").addEventListener("click", (event) => {
+  $("#view-today").addEventListener("click", (event) => {
+    const stepButton = event.target.closest("[data-step-target]");
+    if (stepButton) setTodayStep(stepButton.dataset.stepTarget);
+
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+    if (actionButton.dataset.action === "open-today" || actionButton.dataset.action === "skip-gate") {
+      markIntroSeen();
+      setTodayStep("choose");
+    }
+    if (actionButton.dataset.action === "rescue") {
+      markIntroSeen();
+      setMode("quick3", { rescue: true, minutes: 1 });
+      setTodayStep("prompt");
+    }
+    if (actionButton.dataset.action === "use-recommend") {
+      markIntroSeen();
+      setMode(starterStep(state.entries).modeId);
+      setTodayStep("prompt");
+    }
+  });
+
+  $("#issue-list").addEventListener("click", (event) => {
     const button = event.target.closest("[data-issue]");
     if (!button) return;
     selectedIssue = button.dataset.issue;
@@ -409,52 +428,28 @@ function bindEvents() {
       minutes: state.settings.defaultMinutes
     });
     setMode(modeId);
+    setTodayStep("prompt");
   });
 
-  $("#group-filters").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-group]");
-    if (!button) return;
-    selectedGroup = button.dataset.group;
-    render();
+  $("#prompt-prev").addEventListener("click", () => {
+    promptIndex = Math.max(0, promptIndex - 1);
+    renderPrompt();
   });
 
-  $("#template-list").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-mode-id]");
-    if (!button) return;
-    setMode(button.dataset.modeId);
-    setTodayStep("copy");
-    setView("today");
+  $("#prompt-next").addEventListener("click", () => {
+    const mode = getMode(state.currentModeId);
+    if (promptIndex >= mode.prompts.length - 1) setTodayStep("timer");
+    else {
+      promptIndex += 1;
+      renderPrompt();
+    }
   });
 
-  $$("[data-mode-shortcut]").forEach((button) => {
-    button.addEventListener("click", () => {
-      setMode(button.dataset.modeShortcut);
-      setView("today");
-    });
-  });
-
-  $("#starter-mode-button")?.addEventListener("click", () => {
-    setMode(starterStep(state.entries).modeId);
-    setTodayStep("copy");
-  });
-
-  $(".rescue-button").addEventListener("click", () => {
-    setMode("quick3", { rescue: true, minutes: 1 });
-    setTodayStep("copy");
-    showToast("1分レスキューに切り替えました。1行でも記録できます。");
-  });
-
-  $("#copy-prompt").addEventListener("click", copyPrompt);
-
-  $("#shuffle-mode").addEventListener("click", () => {
-    const currentIndex = MODES.findIndex((mode) => mode.id === state.currentModeId);
-    setMode(MODES[(currentIndex + 1) % MODES.length].id);
-  });
+  $("#copy-prompts").addEventListener("click", copyPrompts);
 
   $("#timer-toggle").addEventListener("click", () => {
-    if (timer.running) {
-      stopTimer();
-    } else {
+    if (timer.running) stopTimer();
+    else {
       timer.running = true;
       timer.intervalId = setInterval(tickTimer, 1000);
     }
@@ -469,14 +464,24 @@ function bindEvents() {
 
   $("#complete-session").addEventListener("click", completeSession);
 
-  ["#setting-notebook", "#setting-trigger", "#setting-action", "#setting-minutes", "#setting-privacy"].forEach((selector) => {
+  $("#method-list").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-mode-id]");
+    if (!button) return;
+    setMode(button.dataset.modeId);
+    setTodayStep("prompt");
+    setView("today");
+  });
+
+  ["#setting-trigger", "#setting-action"].forEach((selector) => {
+    $(selector).addEventListener("input", () => updateSettingsFromInputs({ rerender: false }));
+    $(selector).addEventListener("change", updateSettingsFromInputs);
+  });
+  ["#setting-minutes", "#setting-privacy"].forEach((selector) => {
     $(selector).addEventListener("change", updateSettingsFromInputs);
   });
   $$('input[name="setting-theme"]').forEach((input) => {
     input.addEventListener("change", updateSettingsFromInputs);
   });
-  $("#setting-trigger").addEventListener("input", () => updateSettingsFromInputs({ rerender: false }));
-  $("#setting-action").addEventListener("input", () => updateSettingsFromInputs({ rerender: false }));
 
   $("#export-data").addEventListener("click", exportData);
   $("#import-data").addEventListener("change", importData);
@@ -496,26 +501,24 @@ function bindEvents() {
     $(".install-button").classList.add("hidden");
   });
 
-  window.addEventListener("hashchange", () => {
-    const viewName = location.hash.replace("#", "") || "today";
-    setView(viewName);
-  });
+  window.addEventListener("hashchange", () => setView(location.hash.replace("#", "") || "today"));
 }
 
 function boot() {
   systemThemeQuery?.addEventListener?.("change", () => {
     if (state.settings.theme === "system") applyTheme("system");
   });
+  if (!QUOTE_POOL.length) showToast("一言データを読み込めませんでした。");
   timer.duration = state.settings.defaultMinutes * 60;
   timer.remaining = timer.duration;
   bindEvents();
   render();
-  const initialView = location.hash.replace("#", "") || "today";
-  setView(initialView);
+  setTodayStep("gate");
+  setView(location.hash.replace("#", "") || "today");
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {
-      // The app still works as a static page without offline caching.
+      // Static fallback still works without offline caching.
     });
   }
 }

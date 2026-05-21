@@ -13,6 +13,7 @@ import {
   starterStep,
   summarizeWeek
 } from "../js/core.js";
+import { QUOTE_POOL, quoteForDate } from "../js/quotes.js";
 
 test("isoDate and diffDays use local date fields and stable day math", () => {
   assert.equal(isoDate(new Date(2026, 4, 20)), "2026-05-20");
@@ -69,4 +70,20 @@ test("sanitizeState keeps defaults and rejects malformed entries", () => {
   assert.deepEqual(state.entries, []);
   assert.equal(getMode("unknown").id, "quick3");
   assert.equal(makePageCode("2026-05-20", 2), "J-0520-02");
+});
+
+test("quote pool has about 400 sourced quotes and avoids repeats within a year", () => {
+  assert.equal(QUOTE_POOL.length, 400);
+  assert.ok(QUOTE_POOL.filter((quote) => quote.language === "ja").length >= 250);
+  const seen = new Set();
+  for (let day = 0; day < 365; day += 1) {
+    const date = new Date(2026, 0, 1 + day);
+    const iso = isoDate(date);
+    const quote = quoteForDate(iso);
+    assert.ok(quote.text);
+    assert.ok(quote.author);
+    assert.ok(quote.sourceUrl);
+    assert.equal(seen.has(quote.id), false);
+    seen.add(quote.id);
+  }
 });

@@ -1,7 +1,7 @@
 {
-  "name": "Journaling Coach",
-  "short_name": "Journal",
-  "description": "紙ノートでジャーナリングを続けるためのスマホ補助ツール",
+  "name": "余白ノート",
+  "short_name": "余白",
+  "description": "紙ノートでジャーナリングを始めるためのスマホ補助ツール",
   "id": "/journaling-support-tool/",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,8 +10,8 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#f3f5f1",
-  "theme_color": "#f3f5f1",
+  "background_color": "#f5f7f3",
+  "theme_color": "#f5f7f3",
   "categories": ["productivity", "health", "lifestyle"],
   "icons": [
     {
@@ -48,17 +48,17 @@
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "紙に写す型",
+      "name": "型を選ぶ",
       "short_name": "型",
       "description": "テンプレート一覧を開く",
-      "url": "./index.html#templates",
+      "url": "./index.html#methods",
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "習慣を見る",
+      "name": "続き方を見る",
       "short_name": "習慣",
       "description": "続けるための記録を開く",
-      "url": "./index.html#habit",
+      "url": "./index.html#rhythm",
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

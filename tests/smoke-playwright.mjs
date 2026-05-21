@@ -39,15 +39,16 @@ try {
   mobile.on("pageerror", (error) => messages.push(`mobile-error:${error.message}`));
 
   await mobile.goto(baseUrl, { waitUntil: "networkidle" });
-  await mobile.waitForSelector("#settle-title");
+  await mobile.waitForSelector("#gate-title");
   await mobile.evaluate(() => navigator.serviceWorker?.ready);
   await mobile.reload({ waitUntil: "networkidle" });
-  await mobile.waitForSelector("#settle-title");
+  await mobile.waitForSelector("#gate-title");
 
-  await mobile.getByRole("button", { name: "今日を書く" }).click();
-  await mobile.getByRole("button", { name: "紙に写す" }).click();
-  const initial = await mobile.locator("#mode-title").textContent();
-  const promptCount = await mobile.locator("#prompt-list li").count();
+  const gateTitle = await mobile.locator("#gate-title").textContent();
+  const dailyQuote = await mobile.locator("#daily-hint").textContent();
+  await mobile.getByRole("button", { name: "準備できた" }).click();
+  const initial = await mobile.locator("#recommended-title").textContent();
+  const choiceCount = await mobile.locator(".choice-card").count();
   const manifest = await mobile.evaluate(async () => {
     const response = await fetch("manifest.webmanifest");
     return response.json();
@@ -60,16 +61,21 @@ try {
     }));
     return responses;
   });
-  await mobile.getByRole("button", { name: "選ぶ" }).click();
-  await mobile.getByRole("button", { name: "不安" }).click();
-  const afterIssue = await mobile.locator("#mode-title").textContent();
-  await mobile.getByRole("button", { name: "1分だけ" }).click();
-  const rescueTitle = await mobile.locator("#mode-title").textContent();
+  await mobile.getByRole("button", { name: /不安/ }).click();
+  const afterIssue = await mobile.locator("#mode-kicker").textContent();
+  await mobile.reload({ waitUntil: "networkidle" });
+  await mobile.waitForSelector("#gate-title");
+  await mobile.getByRole("button", { name: "1行だけ" }).click();
+  const rescueTitle = await mobile.locator("#mode-kicker").textContent();
+  while ((await mobile.locator("#prompt-next").textContent()) !== "タイマーへ") {
+    await mobile.locator("#prompt-next").click();
+  }
+  await mobile.locator("#prompt-next").click();
   const timerText = await mobile.locator("#timer-face").textContent();
 
-  await mobile.getByRole("button", { name: "タイマーへ" }).click();
-  await mobile.getByRole("button", { name: "終わった" }).click();
+  await mobile.getByRole("button", { name: "書き終えた" }).click();
   await mobile.getByRole("button", { name: "書けた" }).click();
+  await mobile.getByRole("button", { name: "今日は眺めるだけ" }).click();
   await mobile.getByRole("button", { name: "習慣" }).click();
 
   const days = await mobile.locator("#stat-days").textContent();
@@ -98,11 +104,11 @@ try {
     touchIssues.push(...await smallTapTargets(mobile));
   }
   await mobile.goto(`${baseUrl}#review`, { waitUntil: "networkidle" });
-  const hashReviewTitle = await mobile.locator("#habit-title").textContent();
+  const hashReviewTitle = await mobile.locator("#rhythm-title").textContent();
   await mobile.context().setOffline(true);
   await mobile.goto(`${baseUrl}#templates`, { waitUntil: "domcontentloaded" });
-  await mobile.waitForSelector("#templates-title");
-  const offlineTitle = await mobile.locator("#templates-title").textContent();
+  await mobile.waitForSelector("#methods-title");
+  const offlineTitle = await mobile.locator("#methods-title").textContent();
   await mobile.context().setOffline(false);
   await mobile.screenshot({ path: "/private/tmp/journaling-mobile.png", fullPage: false });
 
@@ -110,14 +116,17 @@ try {
   desktop.on("console", (msg) => messages.push(`desktop:${msg.type()}:${msg.text()}`));
   desktop.on("pageerror", (error) => messages.push(`desktop-error:${error.message}`));
   await desktop.goto(baseUrl, { waitUntil: "networkidle" });
+  await desktop.getByRole("button", { name: "今日は眺めるだけ" }).click();
   await desktop.getByRole("button", { name: "型", exact: true }).click();
-  const templateCards = await desktop.locator(".template-card").count();
+  const templateCards = await desktop.locator(".method-card").count();
   const desktopOverflow = await hasHorizontalOverflow(desktop);
   await desktop.screenshot({ path: "/private/tmp/journaling-desktop.png", fullPage: false });
 
   const result = {
+    gateTitle,
+    dailyQuote,
     initial,
-    promptCount,
+    choiceCount,
     afterIssue,
     rescueTitle,
     timerText,
@@ -140,8 +149,11 @@ try {
     messages
   };
 
-  if (promptCount < 3) throw new Error("Prompt list did not render");
-  if (rescueTitle !== "3行だけ") throw new Error("Rescue mode did not switch to quick3");
+  if (!gateTitle.includes("紙に向かう前")) throw new Error("Gate screen did not render");
+  if (!dailyQuote.includes(" / ")) throw new Error("Daily quote did not render with source");
+  if (choiceCount < 8) throw new Error("Choice list did not render");
+  if (!afterIssue.includes("CBT")) throw new Error("Issue choice did not switch mode");
+  if (!rescueTitle.includes("3行だけ")) throw new Error("Rescue mode did not switch to quick3");
   if (timerText !== "01:00") throw new Error("Rescue timer did not set to 1 minute");
   if (days !== "1") throw new Error("Completion did not update habit stats");
   if (rescue !== "1") throw new Error("Rescue completion was not counted");
@@ -150,7 +162,7 @@ try {
   if (manifest.display !== "standalone") throw new Error("Manifest display is not standalone");
   if (!manifest.icons.some((icon) => icon.purpose === "maskable")) throw new Error("Maskable icon is missing");
   if (manifest.shortcuts.length < 3) throw new Error("Manifest shortcuts are missing");
-  if (darkTheme.dataTheme !== "dark" || darkTheme.storedTheme !== "dark" || darkTheme.themeColor !== "#101412") {
+  if (darkTheme.dataTheme !== "dark" || darkTheme.storedTheme !== "dark" || darkTheme.themeColor !== "#111614") {
     throw new Error(`Dark theme did not apply: ${JSON.stringify(darkTheme)}`);
   }
   if (persistedTheme !== "dark") throw new Error("Dark theme did not persist after reload");
@@ -160,8 +172,8 @@ try {
   if (iconStatus.some((item) => !item.ok || !item.contentType?.includes("image/png"))) {
     throw new Error(`PWA PNG icon check failed: ${JSON.stringify(iconStatus)}`);
   }
-  if (hashReviewTitle !== "習慣を見る") throw new Error("Legacy review hash did not open habit view");
-  if (offlineTitle !== "型を選ぶ") throw new Error("Offline fallback did not serve app shell");
+  if (hashReviewTitle !== "続き方を見る") throw new Error("Legacy review hash did not open rhythm view");
+  if (offlineTitle !== "必要な分だけ選ぶ") throw new Error("Offline fallback did not serve app shell");
   if (mobileOverflow.length) throw new Error(`Mobile overflow in views: ${mobileOverflow.join(", ")}`);
   if (touchIssues.length) throw new Error(`Small tap targets found: ${JSON.stringify(touchIssues.slice(0, 8))}`);
   if (desktopOverflow) throw new Error("Desktop overflow found");

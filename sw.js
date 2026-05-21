@@ -1,9 +1,10 @@
-const CACHE_NAME = "journaling-coach-v9";
+const CACHE_NAME = "journaling-coach-v10";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/styles.css",
   "./js/core.js",
+  "./js/quotes.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./assets/icon.svg",
