@@ -39,11 +39,13 @@ try {
   mobile.on("pageerror", (error) => messages.push(`mobile-error:${error.message}`));
 
   await mobile.goto(baseUrl, { waitUntil: "networkidle" });
-  await mobile.waitForSelector("#mode-title");
+  await mobile.waitForSelector("#settle-title");
   await mobile.evaluate(() => navigator.serviceWorker?.ready);
   await mobile.reload({ waitUntil: "networkidle" });
-  await mobile.waitForSelector("#mode-title");
+  await mobile.waitForSelector("#settle-title");
 
+  await mobile.getByRole("button", { name: "今日を書く" }).click();
+  await mobile.getByRole("button", { name: "紙に写す" }).click();
   const initial = await mobile.locator("#mode-title").textContent();
   const promptCount = await mobile.locator("#prompt-list li").count();
   const manifest = await mobile.evaluate(async () => {
@@ -58,12 +60,15 @@ try {
     }));
     return responses;
   });
+  await mobile.getByRole("button", { name: "選ぶ" }).click();
   await mobile.getByRole("button", { name: "不安" }).click();
   const afterIssue = await mobile.locator("#mode-title").textContent();
   await mobile.getByRole("button", { name: "1分だけ" }).click();
   const rescueTitle = await mobile.locator("#mode-title").textContent();
   const timerText = await mobile.locator("#timer-face").textContent();
 
+  await mobile.getByRole("button", { name: "タイマーへ" }).click();
+  await mobile.getByRole("button", { name: "終わった" }).click();
   await mobile.getByRole("button", { name: "書けた" }).click();
   await mobile.getByRole("button", { name: "習慣" }).click();
 
@@ -145,7 +150,7 @@ try {
   if (manifest.display !== "standalone") throw new Error("Manifest display is not standalone");
   if (!manifest.icons.some((icon) => icon.purpose === "maskable")) throw new Error("Maskable icon is missing");
   if (manifest.shortcuts.length < 3) throw new Error("Manifest shortcuts are missing");
-  if (darkTheme.dataTheme !== "dark" || darkTheme.storedTheme !== "dark" || darkTheme.themeColor !== "#0d1110") {
+  if (darkTheme.dataTheme !== "dark" || darkTheme.storedTheme !== "dark" || darkTheme.themeColor !== "#101412") {
     throw new Error(`Dark theme did not apply: ${JSON.stringify(darkTheme)}`);
   }
   if (persistedTheme !== "dark") throw new Error("Dark theme did not persist after reload");

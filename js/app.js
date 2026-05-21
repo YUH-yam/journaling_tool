@@ -29,15 +29,26 @@ const todayFormatter = new Intl.DateTimeFormat("ja-JP", {
 });
 
 const THEME_COLORS = {
-  light: "#f4f6f4",
-  dark: "#0d1110"
+  light: "#f3f5f1",
+  dark: "#101412"
 };
+
+const DAILY_HINTS = [
+  "全部を書くより、ひとつ置く。",
+  "まとまらない日は、まとまらないまま始める。",
+  "紙は判断する場所ではなく、置く場所。",
+  "今日は解決ではなく、見える化だけでいい。",
+  "一行書けたら、流れは戻ってくる。",
+  "考えは頭の中より、紙の上のほうが軽い。",
+  "大きな答えより、小さな現在地を書く。"
+];
 
 const systemThemeQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
 
 let state = loadState();
 let selectedIssue = "start";
 let selectedGroup = "all";
+let currentTodayStep = "settle";
 let isRescue = false;
 let installPrompt = null;
 let timer = {
@@ -95,6 +106,20 @@ function setView(viewName) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function setTodayStep(step) {
+  const safeStep = ["settle", "choose", "copy", "write", "done"].includes(step) ? step : "settle";
+  currentTodayStep = safeStep;
+  $$(".today-step").forEach((section) => {
+    section.classList.toggle("active", section.dataset.step === safeStep);
+  });
+  $(".flow-tabs")?.classList.toggle("hidden", safeStep === "settle");
+  $$(".flow-tab").forEach((button) => {
+    const isActive = button.dataset.todayStep === safeStep;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+}
+
 function setMode(modeId, options = {}) {
   state.currentModeId = modeId;
   isRescue = Boolean(options.rescue);
@@ -140,6 +165,13 @@ function currentPageCode() {
   return makePageCode(today, entriesForDate(state.entries, today).length + 1);
 }
 
+function dailyHint(dateIso = isoDate()) {
+  const date = new Date(`${dateIso}T00:00:00`);
+  const start = new Date(date.getFullYear(), 0, 0);
+  const dayNumber = Math.floor((date - start) / 86400000);
+  return DAILY_HINTS[dayNumber % DAILY_HINTS.length];
+}
+
 function render() {
   const today = isoDate();
   const stats = calculateStats(state.entries, today);
@@ -149,9 +181,9 @@ function render() {
 
   $("#today-date").textContent = todayFormatter.format(new Date());
   $("#guard-detail").textContent = `${stats.guard.title}: ${stats.guard.detail}`;
-  $("#rhythm-percent").textContent = `${stats.rhythmPercent}%`;
-  $("#starter-title").textContent = `${step.dayNumber}日目: ${step.title.replace(/^[^:]+: /, "")}`;
-  $("#starter-goal").textContent = step.goal;
+  $("#daily-hint").textContent = dailyHint(today);
+  if ($("#starter-title")) $("#starter-title").textContent = `${step.dayNumber}日目: ${step.title.replace(/^[^:]+: /, "")}`;
+  if ($("#starter-goal")) $("#starter-goal").textContent = step.goal;
 
   renderIssueChips();
   renderGroupFilters();
@@ -161,6 +193,7 @@ function render() {
   renderHabit(stats, step);
   renderReview(week);
   renderSettings();
+  setTodayStep(currentTodayStep);
 }
 
 function renderIssueChips() {
@@ -290,6 +323,7 @@ function completeSession() {
   isRescue = false;
   saveState();
   render();
+  setTodayStep("settle");
   showToast("記録しました。紙の本文は保存していません。");
 }
 
@@ -355,6 +389,11 @@ function showToast(message) {
 }
 
 function bindEvents() {
+  $("#view-today").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-today-step]");
+    if (button) setTodayStep(button.dataset.todayStep);
+  });
+
   $(".bottom-nav").addEventListener("click", (event) => {
     const button = event.target.closest("[data-view]");
     if (button) setView(button.dataset.view);
@@ -383,6 +422,7 @@ function bindEvents() {
     const button = event.target.closest("[data-mode-id]");
     if (!button) return;
     setMode(button.dataset.modeId);
+    setTodayStep("copy");
     setView("today");
   });
 
@@ -393,12 +433,14 @@ function bindEvents() {
     });
   });
 
-  $("#starter-mode-button").addEventListener("click", () => {
+  $("#starter-mode-button")?.addEventListener("click", () => {
     setMode(starterStep(state.entries).modeId);
+    setTodayStep("copy");
   });
 
   $(".rescue-button").addEventListener("click", () => {
     setMode("quick3", { rescue: true, minutes: 1 });
+    setTodayStep("copy");
     showToast("1分レスキューに切り替えました。1行でも記録できます。");
   });
 
